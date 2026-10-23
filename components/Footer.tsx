@@ -1,10 +1,5 @@
 import Link from "next/link";
 
-async function CopyrightYear() {
-  "use cache";
-  return <>{new Date().getFullYear()}</>;
-}
-
 export default function Footer() {
   return (
     <footer className="dp-footer">
@@ -23,16 +18,16 @@ export default function Footer() {
           <h4>Help</h4>
           <a href="#">How it works</a>
           <a href="#">Safety tips</a>
-          <a href="#">Contact us</a>
+          <a href="mailto:YOUR_SUPPORT_EMAIL">Contact us</a>
         </div>
         <div>
           <h4>Legal</h4>
-          <a href="#">Terms</a>
-          <a href="#">Privacy</a>
+          <Link href="/terms">Terms</Link>
+          <Link href="/privacy">Privacy</Link>
         </div>
       </div>
       <div className="dp-copy">
-        © <CopyrightYear /> Despariat. Meet on campus and inspect items before paying.
+        © {new Date().getFullYear()} Despariat. Meet in public places and inspect items before paying.
       </div>
     </footer>
   );

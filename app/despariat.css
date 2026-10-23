@@ -71,3 +71,7 @@ html{scroll-behavior:smooth}
 .dp-av{width:48px;height:48px;border-radius:50%;background:var(--dp-inv);color:var(--dp-invfg);display:grid;place-items:center;font-weight:800;font-size:20px}
 @media(max-width:720px){.dp-slide{grid-template-columns:1fr;padding:24px 44px 40px}.dp-slide .dp-big{display:none}.dp-meet,.dp-pdg{grid-template-columns:1fr}.dp-img.lg{height:220px;font-size:96px}}
 @media(prefers-reduced-motion:reduce){.dp-track{transition:none}html{scroll-behavior:auto}}
+
+.dp-signin{flex:none}
+.dp-signin :is(button,a){width:auto!important;border-radius:8px!important;background:#fff!important;color:#0a0a0a!important;border:1px solid #fff!important;padding:9px 16px!important;font-weight:600!important;white-space:nowrap}
+.dp-signin form{width:auto!important}

@@ -26,7 +26,9 @@ export default async function Header() {
             <Link href="/listings/new" className="dp-btn">Sell something</Link>
           </>
         ) : (
-          <SignInButton />
+          <div className="dp-signin">
+            <SignInButton />
+          </div>
         )}
       </div>
       <CategoryNav />
