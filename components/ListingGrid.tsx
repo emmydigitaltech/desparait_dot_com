@@ -7,7 +7,8 @@ export default function ListingGrid({ items }: { items: Listing[] }) {
   return (
     <div className="dp-grid">
       {items.map((l) => (
-        <ListingCard key={l.id} listing={l} />      ))}
+        <ListingCard key={l.id} listing={l} />
+      ))}
     </div>
   );
 }
