@@ -1,4 +1,5 @@
 import Link from "next/link";
+import CurrentYear from "./CurrentYear";
 
 export default function Footer() {
   return (
@@ -26,8 +27,9 @@ export default function Footer() {
           <Link href="/privacy">Privacy</Link>
         </div>
       </div>
+
       <div className="dp-copy">
-        © {new Date().getFullYear()} Despariat. Meet in public places and inspect items before paying.
+        © <CurrentYear /> Despariat. Meet in public places and inspect items before paying.
       </div>
     </footer>
   );
