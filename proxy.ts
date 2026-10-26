@@ -21,7 +21,17 @@ export async function proxy(request: NextRequest) {
     }
   );
 
-  await supabase.auth.getClaims(); // refreshes session without a network call per request
+  const { data } = await supabase.auth.getClaims();
+
+  const path = request.nextUrl.pathname;
+  const guarded = ["/dashboard", "/listings/new", "/verify", "/onboarding", "/admin"];
+  if (!data?.claims && guarded.some((p) => path === p || path.startsWith(p + "/"))) {
+    const url = request.nextUrl.clone();
+    url.pathname = "/login";
+    url.search = `?next=${encodeURIComponent(path)}`;
+    return NextResponse.redirect(url);
+  }
+
   return response;
 }
 

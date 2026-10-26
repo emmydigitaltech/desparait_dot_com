@@ -1,8 +1,8 @@
 import Link from "next/link";
 import { connection } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import SignInButton from "./SignInButton";
 import CategoryNav from "./CategoryNav";
+import ProfileMenu from "./ProfileMenu";
 
 export default async function Header() {
   await connection(); // must come before any Supabase call
@@ -24,11 +24,13 @@ export default async function Header() {
           <>
             <Link href="/dashboard" className="dp-btn-o">Dashboard</Link>
             <Link href="/listings/new" className="dp-btn">Sell something</Link>
+            <ProfileMenu />
           </>
         ) : (
-          <div className="dp-signin">
-            <SignInButton />
-          </div>
+          <>
+            <Link href="/login" className="dp-btn-o">Sign in</Link>
+            <Link href="/signup" className="dp-btn">Create account</Link>
+          </>
         )}
       </div>
       <CategoryNav />

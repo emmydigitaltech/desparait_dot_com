@@ -4,36 +4,46 @@ import { catBySlug } from "@/lib/categories";
 import { naira } from "@/lib/format";
 import VerifiedBadge from "./VerifiedBadge";
 
-export default function ListingCard({ l }: { l: Listing }) {
-  const cat = catBySlug(l.category);
-  const off =
-    l.original_price && l.original_price > l.price
-      ? Math.round((1 - l.price / l.original_price) * 100)
-      : 0;
+export type CardListing = {
+  id: string;
+  title: string;
+  price: number;
+  original_price: number | null;
+  image_url: string | null;
+  condition: string | null;
+  category: string | null;
+};
+
+const CONDITION_LABEL: Record<string, string> = {
+  new: "New",
+  like_new: "Like new",
+  good: "Good",
+  fair: "Fair",
+};
+
+export default function ListingCard({ listing }: { listing: CardListing }) {
+  const { id, title, price, original_price, image_url, condition } = listing;
   return (
-    <Link href={`/listings/${l.id}`} className="dp-card">
-      <div className="dp-img">
-        {l.image_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={l.image_url} alt={l.title} loading="lazy" />
+    <Link href={`/listings/${id}`} className="dp-card">
+      <div className="dp-card-img">
+        {image_url ? (
+          <img src={image_url} alt={title} loading="lazy" />
         ) : (
-          <span aria-hidden>{cat?.emoji ?? "🛍️"}</span>
+          <span className="dp-card-noimg">No photo</span>
         )}
-        {off > 0 && <span className="dp-off">-{off}%</span>}
       </div>
-      <div className="dp-ttl">{l.title}</div>
-      <div className="dp-pr">
-        {naira(l.price)}
-        {off > 0 && <s>{naira(l.original_price!)}</s>}
+      <div className="dp-card-body">
+        <div className="dp-card-title">{title}</div>
+        <div className="dp-card-price">
+          ₦{price.toLocaleString()}
+          {original_price && original_price > price && (
+            <s className="dp-card-old">₦{original_price.toLocaleString()}</s>
+          )}
+        </div>
+        {condition && (
+          <span className="dp-card-tag">{CONDITION_LABEL[condition] ?? condition}</span>
+        )}
       </div>
-      <div className="dp-meta">
-        📍 <b>Meet on campus</b> · inspect first
-      </div>
-      <div className="dp-sel">
-        Sold by {l.seller?.full_name ?? "Student seller"}
-        {l.seller?.is_verified && <VerifiedBadge />}
-      </div>
-      <span className="dp-btn">View listing</span>
     </Link>
   );
 }

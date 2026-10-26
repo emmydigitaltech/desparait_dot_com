@@ -46,7 +46,10 @@ export default function OnboardingPage() {
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    if (!user) return router.replace("/");
+    if (!user) {
+      setSaving(false);
+      return router.replace("/");
+    }
 
     const { error } = await supabase.from("profiles").upsert({
       id: user.id,
@@ -60,64 +63,58 @@ export default function OnboardingPage() {
   }
 
   return (
-    <main className="mx-auto max-w-md p-4"><div className="card mt-4">
-      <h1 className="text-2xl font-medium">Set up your profile</h1>
-      <p className="mt-1 text-gray-600">
-        You'll only see listings from your school.
-      </p>
+    <main className="dp-main">
+      <div className="dp-auth">
+        <h1>Set up your profile</h1>
+        <p className="dp-meta">You&apos;ll only see listings from your school.</p>
 
-      <form onSubmit={save} className="mt-6 space-y-4">
-        <label className="block">
-          <span className="text-sm font-medium">Your name</span>
-          <input
-            required
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            className="input mt-1"
-          />
-        </label>
+        <form onSubmit={save} className="dp-form" style={{ marginTop: 20 }}>
+          <label>
+            Your name
+            <input
+              required
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+            />
+          </label>
 
-        <label className="block">
-          <span className="text-sm font-medium">School</span>
-          <select
-            required
-            value={schoolId}
-            onChange={(e) => setSchoolId(e.target.value)}
-            className="input mt-1"
-          >
-            <option value="">Select your school</option>
-            {schools.map((s) => (
-              <option key={s.id} value={s.id}>
-                {s.name}
-              </option>
-            ))}
-          </select>
-        </label>
+          <label>
+            School
+            <select
+              required
+              value={schoolId}
+              onChange={(e) => setSchoolId(e.target.value)}
+            >
+              <option value="">Select your school</option>
+              {schools.map((s) => (
+                <option key={s.id} value={s.id}>
+                  {s.name}
+                </option>
+              ))}
+            </select>
+          </label>
 
-        <label className="block">
-          <span className="text-sm font-medium">WhatsApp number</span>
-          <input
-            required
-            type="tel"
-            placeholder="08012345678"
-            value={whatsapp}
-            onChange={(e) => setWhatsapp(e.target.value)}
-            className="input mt-1"
-          />
-          <span className="text-xs text-gray-500">
-            Buyers use this to message you about your listings.
-          </span>
-        </label>
+          <label>
+            WhatsApp number
+            <input
+              required
+              type="tel"
+              placeholder="08012345678"
+              value={whatsapp}
+              onChange={(e) => setWhatsapp(e.target.value)}
+            />
+            <span className="dp-meta" style={{ fontWeight: 400 }}>
+              Buyers use this to message you about your listings.
+            </span>
+          </label>
 
-        {error && <p className="text-sm text-[#C40000]">{error}</p>}
+          {error && <p className="dp-err">{error}</p>}
 
-        <button
-          disabled={saving}
-          className="btn-primary w-full py-2.5"
-        >
-          {saving ? "Saving..." : "Continue"}
-        </button>
-      </form>
-    </div></main>
+          <button className="dp-btn" type="submit" disabled={saving}>
+            {saving ? "Saving..." : "Continue"}
+          </button>
+        </form>
+      </div>
+    </main>
   );
 }

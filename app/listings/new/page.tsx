@@ -4,8 +4,16 @@ import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-type Category = { id: string; name: string };
-const CONDITIONS = ["New", "Like new", "Good", "Fair"];
+type Category = { slug: string; label: string; emoji: string | null };
+
+// value must match listings_condition_check in the DB
+const CONDITIONS = [
+  { value: "new", label: "New" },
+  { value: "like_new", label: "Like new" },
+  { value: "good", label: "Good" },
+  { value: "fair", label: "Fair" },
+];
+
 const MAX_IMAGES = 4;
 
 export default function NewListingPage() {
@@ -17,8 +25,8 @@ export default function NewListingPage() {
     title: "",
     description: "",
     price: "",
-    category_id: "",
-    condition: "Good",
+    category: "",
+    condition: "good",
   });
   const [files, setFiles] = useState<File[]>([]);
   const [saving, setSaving] = useState(false);
@@ -31,10 +39,11 @@ export default function NewListingPage() {
       } = await supabase.auth.getUser();
       if (!user) return router.replace("/");
 
-      const [{ data: p }, { data: c }] = await Promise.all([
+      const [{ data: p }, { data: c, error: catErr }] = await Promise.all([
         supabase.from("profiles").select("school_id").eq("id", user.id).maybeSingle(),
-        supabase.from("categories").select("id, name").order("name"),
+        supabase.from("categories").select("slug, label, emoji").order("sort_order"),
       ]);
+      if (catErr) setError("Could not load categories: " + catErr.message);
       if (!p?.school_id) return router.replace("/onboarding");
       setSchoolId(p.school_id);
       setCategories(c ?? []);
@@ -60,11 +69,10 @@ export default function NewListingPage() {
         .from("listings")
         .insert({
           seller_id: user.id,
-          school_id: schoolId,
-          category_id: form.category_id,
+          category: form.category,
           title: form.title.trim(),
           description: form.description.trim(),
-          price: Number(form.price),
+          price: Math.round(Number(form.price)),
           condition: form.condition,
           status: "active",
         })
@@ -82,11 +90,14 @@ export default function NewListingPage() {
           .upload(path, file, { contentType: file.type });
         if (upErr) throw upErr;
         const { data } = supabase.storage.from("listing-images").getPublicUrl(path);
-        rows.push({ listing_id: listing.id, image_url: data.publicUrl, position: i });
+        rows.push({ listing_id: listing.id, url: data.publicUrl, position: i });
       }
 
       const { error: imgErr } = await supabase.from("listing_images").insert(rows);
       if (imgErr) throw imgErr;
+
+      // cover photo used by the browse page
+      await supabase.from("listings").update({ image_url: rows[0].url }).eq("id", listing.id);
 
       router.push(`/listings/${listing.id}`);
     } catch (err: any) {
@@ -96,22 +107,21 @@ export default function NewListingPage() {
   }
 
   return (
-    <main className="mx-auto max-w-lg p-4"><div className="card mt-2">
-      <h1 className="text-2xl font-medium">Sell something</h1>
-      <form onSubmit={submit} className="mt-4 space-y-4">
+    <main className="dp-sell">
+      <form onSubmit={submit} className="dp-sell-card">
+        <h1>Sell something</h1>
+
         <input
           required
           placeholder="Title (e.g. Metal bed frame)"
           value={form.title}
           onChange={set("title")}
-          className="input"
         />
         <textarea
           rows={4}
           placeholder="Description"
           value={form.description}
           onChange={set("description")}
-          className="input"
         />
         <input
           required
@@ -120,28 +130,21 @@ export default function NewListingPage() {
           placeholder="Price in ₦"
           value={form.price}
           onChange={set("price")}
-          className="input"
         />
-        <select
-          required
-          value={form.category_id}
-          onChange={set("category_id")}
-          className="input"
-        >
+        <select required value={form.category} onChange={set("category")}>
           <option value="">Category</option>
           {categories.map((c) => (
-            <option key={c.id} value={c.id}>
-              {c.name}
+            <option key={c.slug} value={c.slug}>
+              {c.emoji ? `${c.emoji} ` : ""}
+              {c.label}
             </option>
           ))}
         </select>
-        <select
-          value={form.condition}
-          onChange={set("condition")}
-          className="input"
-        >
+        <select value={form.condition} onChange={set("condition")}>
           {CONDITIONS.map((c) => (
-            <option key={c}>{c}</option>
+            <option key={c.value} value={c.value}>
+              {c.label}
+            </option>
           ))}
         </select>
 
@@ -150,22 +153,21 @@ export default function NewListingPage() {
             type="file"
             accept="image/*"
             multiple
-            onChange={(e) => setFiles(Array.from(e.target.files ?? []).slice(0, MAX_IMAGES))}
+            onChange={(e) =>
+              setFiles(Array.from(e.target.files ?? []).slice(0, MAX_IMAGES))
+            }
           />
-          <p className="mt-1 text-xs text-gray-500">
+          <p className="dp-sell-hint">
             Up to {MAX_IMAGES} photos. {files.length} selected.
           </p>
         </div>
 
-        {error && <p className="text-sm text-[#C40000]">{error}</p>}
+        {error && <p className="dp-sell-error">{error}</p>}
 
-        <button
-          disabled={saving || !schoolId}
-          className="btn-primary w-full py-2.5"
-        >
+        <button className="dp-sell-btn" disabled={saving || !schoolId}>
           {saving ? "Publishing..." : "Publish listing"}
         </button>
       </form>
-    </div></main>
+    </main>
   );
 }

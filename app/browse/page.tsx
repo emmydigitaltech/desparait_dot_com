@@ -19,8 +19,13 @@ export default async function Browse({
   if (cat) query = query.eq("category", cat);
   if (q) query = query.ilike("title", `%${q.replace(/[%_]/g, "")}%`);
 
-  const { data } = await query.limit(60);
-  const items = (data ?? []) as unknown as Listing[];
+const { data, error } = await query.limit(60);  const items = (data ?? []) as unknown as Listing[];
+
+  if (error) {
+    console.error(
+      `browse query failed | code=${error.code} | message=${error.message} | details=${error.details} | hint=${error.hint}`
+    );
+  }
 
   return (
     <>

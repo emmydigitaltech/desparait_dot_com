@@ -27,7 +27,7 @@ async function HomeListings() {
       <h2 className="dp-h2">Trending on campus</h2>
       <div className="dp-row-scroll">
         {items.slice(0, 7).map((l) => (
-          <ListingCard key={l.id} l={l} />
+          <ListingCard key={l.id} listing={l} />
         ))}
       </div>
 
