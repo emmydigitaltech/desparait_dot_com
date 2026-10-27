@@ -14,15 +14,25 @@ async function HomeListings() {
   await connection(); // must come before any Supabase call
 
   const supabase = await createClient();
-  const { data } = await supabase
+  const { data, error } = await supabase
     .from("listings")
     .select(LISTING_SELECT)
+    .eq("status", "active")
     .order("created_at", { ascending: false })
     .limit(16);
+
+  if (error) console.error("Home listings error:", error);
   const items = (data ?? []) as unknown as Listing[];
 
   return (
     <>
+      {/* TEMP: remove once the home page shows listings */}
+      {error && (
+        <p style={{ color: "#f66" }}>
+          Query error: {error.code} {error.message}
+        </p>
+      )}
+
       {/* "Trending" = newest for now. Swap the order for views/sales if you track them. */}
       <h2 className="dp-h2">Trending on campus</h2>
       <div className="dp-row-scroll">
