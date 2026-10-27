@@ -15,14 +15,21 @@ async function Dashboard() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const [{ data: profile }, { data: req }] = await Promise.all([
+  const [{ data: profile }, { data: req }, { data: myListings, error: listingsError }] = await Promise.all([
     supabase.from('profiles')
       .select('full_name, avatar_url, phone, campus, role, is_verified')
       .eq('id', user.id).single(),
     supabase.from('verification_requests')
       .select('status, note').eq('user_id', user.id)
       .order('created_at', { ascending: false }).limit(1).maybeSingle(),
+    supabase.from('listings')
+      .select('id, title, price, status, image_url, created_at')
+      .eq('seller_id', user.id)
+      .order('created_at', { ascending: false })
+      .limit(20),
   ])
+
+  if (listingsError) console.error('Dashboard listings error:', listingsError)
 
   const done = STEPS.filter((s) => profile?.[s.key])
   const pct = Math.round((done.length / STEPS.length) * 100)
@@ -81,6 +88,33 @@ async function Dashboard() {
               {req?.status === 'rejected' ? 'Resubmit verification' : 'Become a verified seller'}
             </Link>
           </>
+        )}
+      </section>
+
+      <section className="rounded-xl border p-4">
+        <div className="mb-3 flex items-center justify-between">
+          <h2 className="font-medium">My listings</h2>
+          <Link href="/listings/new" className="text-sm text-blue-600 underline">New listing</Link>
+        </div>
+        {!myListings?.length ? (
+          <p className="text-sm text-gray-600">You haven&apos;t posted anything yet.</p>
+        ) : (
+          <ul className="space-y-2">
+            {myListings.map((l) => (
+              <li key={l.id}>
+                <Link href={`/listings/${l.id}`} className="flex items-center gap-3 rounded-lg border p-2">
+                  {l.image_url && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img src={l.image_url} alt="" className="h-12 w-12 rounded object-cover" />
+                  )}
+                  <div className="min-w-0 flex-1">
+                    <p className="truncate text-sm font-medium">{l.title}</p>
+                    <p className="text-xs text-gray-600">₦{Number(l.price).toLocaleString()} · {l.status}</p>
+                  </div>
+                </Link>
+              </li>
+            ))}
+          </ul>
         )}
       </section>
     </main>
