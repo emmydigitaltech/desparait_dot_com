@@ -46,70 +46,70 @@ async function Dashboard() {
       <header className="flex items-center gap-4">
         {profile?.avatar_url && (
           // eslint-disable-next-line @next/next/no-img-element
-          <img src={profile.avatar_url} alt="" className="h-14 w-14 rounded-full" />
+          <img src={profile.avatar_url} alt="" className="h-14 w-14 rounded-full object-cover" />
         )}
         <div>
           <h1 className="text-xl font-semibold">{profile?.full_name ?? user.email}</h1>
-          <span className="rounded-full bg-blue-100 px-3 py-0.5 text-sm text-blue-800">{category}</span>
+          <span className="dp-pill">{category}</span>
         </div>
       </header>
 
-      <section className="rounded-xl border p-4">
+      <section className="dp-panel">
         <div className="mb-2 flex justify-between text-sm font-medium">
           <span>Profile completion</span><span>{pct}%</span>
         </div>
-        <div className="h-2 rounded-full bg-gray-200">
-          <div className="h-2 rounded-full bg-blue-500" style={{ width: `${pct}%` }} />
+        <div className="dp-bar">
+          <div style={{ width: `${pct}%` }} />
         </div>
         {missing.length > 0 && (
-          <ul className="mt-3 list-disc pl-5 text-sm text-gray-600">
+          <ul className="dp-mut mt-3 list-disc pl-5 text-sm">
             {missing.map((m) => <li key={m.key}>{m.label}</li>)}
           </ul>
         )}
-        <Link href="/dashboard/profile" className="mt-3 inline-block text-sm text-blue-600 underline">
+        <Link href="/dashboard/profile" className="dp-link mt-3 inline-block text-sm">
           Edit profile
         </Link>
       </section>
 
-      <section className="rounded-xl border p-4">
+      <section className="dp-panel">
         {profile?.role === 'admin' ? (
-          <Link href="/admin" className="text-blue-600 underline">Go to admin panel</Link>
+          <Link href="/admin" className="dp-link">Go to admin panel</Link>
         ) : profile?.is_verified ? (
-          <Link href="/listings/new" className="text-blue-600 underline">Create a listing</Link>
+          <Link href="/listings/new" className="dp-link">Create a listing</Link>
         ) : req?.status === 'pending' ? (
           <p className="text-sm">Your seller verification is under review.</p>
         ) : (
           <>
             {req?.status === 'rejected' && (
-              <p className="mb-2 text-sm text-red-600">Rejected: {req.note}</p>
+              <p className="dp-sell-error mb-2">Rejected: {req.note}</p>
             )}
             <p className="mb-2 text-sm">Want to sell on campus?</p>
-            <Link href="/verify" className="rounded-lg bg-blue-600 px-4 py-2 text-white">
+            <Link href="/verify" className="dp-btn">
               {req?.status === 'rejected' ? 'Resubmit verification' : 'Become a verified seller'}
             </Link>
           </>
         )}
       </section>
 
-      <section className="rounded-xl border p-4">
+      <section className="dp-panel">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="font-medium">My listings</h2>
-          <Link href="/listings/new" className="text-sm text-blue-600 underline">New listing</Link>
+          <Link href="/listings/new" className="dp-link text-sm">New listing</Link>
         </div>
         {!myListings?.length ? (
-          <p className="text-sm text-gray-600">You haven&apos;t posted anything yet.</p>
+          <p className="dp-mut text-sm">You haven&apos;t posted anything yet.</p>
         ) : (
           <ul className="space-y-2">
             {myListings.map((l) => (
               <li key={l.id}>
-                <Link href={`/listings/${l.id}`} className="flex items-center gap-3 rounded-lg border p-2">
+                <Link href={`/listings/${l.id}`} className="dp-lrow">
                   {l.image_url && (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={l.image_url} alt="" className="h-12 w-12 rounded object-cover" />
                   )}
                   <div className="min-w-0 flex-1">
                     <p className="truncate text-sm font-medium">{l.title}</p>
-                    <p className="text-xs text-gray-600">₦{Number(l.price).toLocaleString()} · {l.status}</p>
+                    <p className="dp-mut text-xs">₦{Number(l.price).toLocaleString()} · {l.status}</p>
                   </div>
                 </Link>
               </li>

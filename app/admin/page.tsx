@@ -2,7 +2,6 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
-import { createAdminClient } from "@/lib/supabase/admin";
 
 type Item = {
   id: string;
@@ -85,12 +84,13 @@ export default function AdminPage() {
 
   return (
     <main className="mx-auto max-w-2xl p-4">
+      <a href="/admin/users" className="mb-3 inline-block text-sm underline">Manage users</a>
       <h1 className="mb-4 text-xl font-bold">Verification requests ({items.length})</h1>
       {err && <p className="mb-3 rounded bg-red-50 p-3 text-sm text-red-700">{err}</p>}
       {items.length === 0 && <p className="text-gray-600">No pending requests.</p>}
       <div className="flex flex-col gap-4">
         {items.map((it) => (
-          <div key={it.id} className="rounded border bg-white p-4">
+          <div key={it.id} className="rounded border bg-white p-4" style={{ color: "#111" }}>
             <p className="mb-2 font-medium">
               {it.name}{" "}
               <span className="text-xs text-gray-500">{new Date(it.created_at).toLocaleString()}</span>

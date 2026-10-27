@@ -337,3 +337,13 @@ html{scroll-behavior:smooth}
 /* Trending row: fixed-width cards that scroll sideways */
 .dp-row-scroll { display: flex; gap: 10px; overflow-x: auto; padding-bottom: 8px; scroll-snap-type: x proximity; }
 .dp-row-scroll .dp-lc { flex: 0 0 170px; scroll-snap-align: start; }
+
+/* ---------- Dashboard ---------- */
+.dp-panel{border:1px solid var(--dp-line);background:var(--dp-soft);border-radius:12px;padding:16px}
+.dp-mut{color:var(--dp-mut)}
+.dp-link{color:var(--dp-fg);text-decoration:underline}
+.dp-pill{display:inline-block;border:1px solid var(--dp-line);background:var(--dp-bg);color:var(--dp-fg);border-radius:999px;padding:2px 12px;font-size:14px}
+.dp-bar{height:8px;border-radius:999px;background:var(--dp-line)}
+.dp-bar>div{height:8px;border-radius:999px;background:#ffd814}
+.dp-lrow{display:flex;align-items:center;gap:12px;border:1px solid var(--dp-line);background:var(--dp-bg);border-radius:8px;padding:8px;color:inherit;text-decoration:none}
+.dp-lrow:hover{border-color:var(--dp-fg)}
