@@ -32,7 +32,7 @@ export default function AuthForm({ mode, next }: { mode: "login" | "signup"; nex
       setBusy(false);
       if (error) return setErr(error.message);
       if (data.session) {
-        router.push(next);
+        router.replace(next);
         router.refresh();
       } else {
         setSent(true); // email confirmation is switched on in Supabase
@@ -41,7 +41,7 @@ export default function AuthForm({ mode, next }: { mode: "login" | "signup"; nex
       const { error } = await supabase.auth.signInWithPassword({ email: email.trim(), password });
       setBusy(false);
       if (error) return setErr(error.message);
-      router.push(next);
+      router.replace(next);
       router.refresh();
     }
   }
