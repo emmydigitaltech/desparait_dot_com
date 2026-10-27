@@ -12,6 +12,16 @@ export default async function Header() {
     data: { user },
   } = await supabase.auth.getUser();
 
+  let isAdmin = false;
+  if (user) {
+    const { data: profile } = await supabase
+      .from("profiles")
+      .select("is_admin")
+      .eq("id", user.id)
+      .single();
+    isAdmin = !!profile?.is_admin;
+  }
+
   return (
     <header className="dp-header">
       <div className="dp-top">
@@ -24,7 +34,7 @@ export default async function Header() {
           <>
             <Link href="/dashboard" className="dp-btn-o">Dashboard</Link>
             <Link href="/listings/new" className="dp-btn">Sell something</Link>
-            <ProfileMenu />
+            <ProfileMenu isAdmin={isAdmin} />
           </>
         ) : (
           <>

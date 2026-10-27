@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import SignOutButton from "@/app/components/SignOutButton";
 
-export default function ProfileMenu() {
+export default function ProfileMenu({ isAdmin = false }: { isAdmin?: boolean }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -34,11 +34,15 @@ export default function ProfileMenu() {
       >
         Profile ▾
       </button>
+
       {open && (
         <div className="dp-menu-list" role="menu" onClick={() => setOpen(false)}>
           <Link href="/listings" className="dp-menu-item" role="menuitem">My listings</Link>
           <Link href="/onboarding" className="dp-menu-item" role="menuitem">Edit profile</Link>
           <Link href="/listings/new" className="dp-menu-item" role="menuitem">Sell something</Link>
+          {isAdmin && (
+            <Link href="/admin" className="dp-menu-item" role="menuitem">Admin</Link>
+          )}
           <SignOutButton className="dp-menu-item" />
         </div>
       )}
