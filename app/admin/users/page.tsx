@@ -4,7 +4,7 @@ import { redirect } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
-import { setVerified } from "./actions";
+import VerifyButton from "./VerifyButton";
 
 type SP = Promise<{ q?: string; filter?: string }>;
 
@@ -156,19 +156,7 @@ async function UsersList({ searchParams }: { searchParams: SP }) {
                 <td style={{ padding: 8 }}>{r.listings}</td>
                 <td style={{ padding: 8 }}>{r.verified ? "Verified" : "Unverified"}</td>
                 <td style={{ padding: 8 }}>
-                  <form action={setVerified}>
-                    <input type="hidden" name="userId" value={r.id} />
-                    <input type="hidden" name="verify" value={String(!r.verified)} />
-                    <button
-                      type="submit"
-                      style={{
-                        padding: "6px 12px", borderRadius: 6, color: "#fff",
-                        background: r.verified ? "#b91c1c" : "#15803d",
-                      }}
-                    >
-                      {r.verified ? "Unverify" : "Verify"}
-                    </button>
-                  </form>
+                  <VerifyButton userId={r.id} verified={r.verified} />
                 </td>
               </tr>
             ))}
