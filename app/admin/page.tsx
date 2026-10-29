@@ -2,6 +2,7 @@
 import { useEffect, useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { decideRequest } from "./actions";
 
 type Item = {
   id: string;
@@ -26,8 +27,8 @@ export default function AdminPage() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return router.replace("/");
 
-    const { data: me } = await supabase.from("profiles").select("role").eq("id", user.id).single();
-    if (me?.role !== "admin") return router.replace("/");
+    const { data: me } = await supabase.from("profiles").select("role,is_admin").eq("id", user.id).single();
+    if (!(me?.is_admin || me?.role === "admin")) return router.replace("/");
 
     const { data: reqs, error } = await supabase
       .from("verification_requests")
@@ -64,17 +65,13 @@ export default function AdminPage() {
       note = prompt("Reason for rejection (shown to the user):") ?? "";
       if (!note) { setBusyId(null); return; }
     }
-    const { error: e1 } = await supabase
-      .from("verification_requests")
-      .update({ status: approve ? "approved" : "rejected", note })
-      .eq("id", it.id);
-    if (e1) { setErr(e1.message); setBusyId(null); return; }
-    if (approve) {
-      const { error: e2 } = await supabase
-        .from("profiles")
-        .update({ is_verified: true })
-        .eq("id", it.user_id);
-      if (e2) { setErr(e2.message); setBusyId(null); return; }
+    try {
+      const res = await decideRequest(it.id, approve, note);
+      if (res?.error) { setErr(res.error); setBusyId(null); return; }
+    } catch (e: any) {
+      setErr(e?.message ?? "Something went wrong");
+      setBusyId(null);
+      return;
     }
     setItems((l) => l.filter((x) => x.id !== it.id));
     setBusyId(null);

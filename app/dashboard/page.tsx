@@ -2,6 +2,7 @@ import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { connection } from "next/server";
 
 const STEPS = [
   { key: 'full_name', label: 'Add your full name' },
@@ -11,6 +12,7 @@ const STEPS = [
 ] as const
 
 async function Dashboard() {
+  await connection();
   const supabase = await createClient()
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')

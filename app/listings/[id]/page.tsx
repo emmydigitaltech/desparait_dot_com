@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 import { useParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
+import VerifiedBadge from "@/components/VerifiedBadge";
 
 type Listing = {
   id: string;
@@ -17,6 +18,12 @@ type Listing = {
   condition: string | null;
   status: string;
   created_at: string;
+};
+
+type Seller = {
+  full_name: string | null;
+  whatsapp: string | null;
+  is_verified: boolean | null;
 };
 
 const CONDITION_LABELS: Record<string, string> = {
@@ -40,7 +47,7 @@ export default function ListingDetailPage() {
   const [listing, setListing] = useState<Listing | null>(null);
   const [images, setImages] = useState<string[]>([]);
   const [active, setActive] = useState(0);
-  const [seller, setSeller] = useState<{ full_name: string | null; whatsapp: string | null } | null>(null);
+  const [seller, setSeller] = useState<Seller | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
@@ -65,12 +72,12 @@ export default function ListingDetailPage() {
 
       const [{ data: imgs }, { data: p }] = await Promise.all([
         supabase.from("listing_images").select("url, position").eq("listing_id", id).order("position"),
-        supabase.from("profiles").select("full_name, whatsapp").eq("id", l.seller_id).maybeSingle(),
+        supabase.from("profiles").select("full_name, whatsapp, is_verified").eq("id", l.seller_id).maybeSingle(),
       ]);
 
       const urls = (imgs ?? []).map((i) => i.url);
       setImages(urls.length ? urls : l.image_url ? [l.image_url] : []);
-      setSeller(p ?? null);
+      setSeller((p as Seller) ?? null);
       setLoading(false);
     })();
   }, [id]); // eslint-disable-line react-hooks/exhaustive-deps
@@ -143,7 +150,17 @@ export default function ListingDetailPage() {
 
           <div className="dp-listing-seller">
             <p className="dp-listing-muted">Seller</p>
-            <p>{seller?.full_name ?? "Student seller"}</p>
+            <Link
+              href={`/sellers/${listing.seller_id}`}
+              className="dp-link"
+              style={{ display: "inline-flex", alignItems: "center", gap: 6 }}
+            >
+              {seller?.full_name ?? "Student seller"}
+              {seller?.is_verified && <VerifiedBadge size={16} />}
+            </Link>
+            <p className="dp-listing-muted" style={{ fontSize: 13, marginTop: 2 }}>
+              View profile →
+            </p>
           </div>
 
           {seller?.whatsapp ? (

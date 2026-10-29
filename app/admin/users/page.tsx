@@ -5,6 +5,7 @@ import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import VerifyButton from "./VerifyButton";
+import VerifiedBadge from "@/components/VerifiedBadge";
 
 type SP = Promise<{ q?: string; filter?: string }>;
 
@@ -145,9 +146,10 @@ async function UsersList({ searchParams }: { searchParams: SP }) {
             {rows.map((r) => (
               <tr key={r.id} style={{ borderBottom: "1px solid var(--dp-line)" }}>
                 <td style={{ padding: 8 }}>
-                  <div style={{ fontWeight: 600 }}>
+                  <div style={{ fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
                     {r.name}
-                    {r.admin && <span style={{ marginLeft: 6, fontSize: 11, opacity: 0.7 }}>(admin)</span>}
+                    {r.verified && <VerifiedBadge size={15} />}
+                    {r.admin && <span style={{ fontSize: 11, opacity: 0.7 }}>(admin)</span>}
                   </div>
                   <div style={{ fontSize: 12, opacity: 0.7 }}>{r.email}</div>
                 </td>

@@ -347,3 +347,64 @@ html{scroll-behavior:smooth}
 .dp-bar>div{height:8px;border-radius:999px;background:#ffd814}
 .dp-lrow{display:flex;align-items:center;gap:12px;border:1px solid var(--dp-line);background:var(--dp-bg);border-radius:8px;padding:8px;color:inherit;text-decoration:none}
 .dp-lrow:hover{border-color:var(--dp-fg)}
+
+.dp-vcard {
+  background: var(--dp-soft);
+  color: var(--dp-fg);
+  border: 1px solid var(--dp-line);
+  border-radius: 14px;
+  padding: 24px;
+}
+.dp-vcard h1 { color: var(--dp-fg); font-size: 1.4rem; font-weight: 800; margin-bottom: 4px; }
+.dp-vcard .dp-vsub { color: var(--dp-mut); font-size: 0.875rem; line-height: 1.5; margin-bottom: 20px; }
+
+.dp-vlabel { display: block; font-size: 0.875rem; font-weight: 600; color: var(--dp-fg); }
+.dp-vlabel small { display: block; font-weight: 400; color: var(--dp-mut); margin-top: 2px; }
+
+.dp-vdrop {
+  margin-top: 8px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border: 2px dashed var(--dp-line);
+  border-radius: 12px;
+  cursor: pointer;
+  transition: border-color 0.15s, background 0.15s;
+}
+.dp-vdrop:hover { border-color: #ffd814; background: rgba(255, 216, 20, 0.06); }
+.dp-vdrop.has-file { border-style: solid; border-color: #ffd814; }
+.dp-vdrop input { display: none; }
+.dp-vbtn {
+  flex-shrink: 0;
+  background: var(--dp-inv);
+  color: var(--dp-invfg);
+  font-size: 0.8rem;
+  font-weight: 600;
+  padding: 6px 12px;
+  border-radius: 8px;
+}
+.dp-vname {
+  color: var(--dp-mut);
+  font-size: 0.8rem;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+}
+.dp-vdrop.has-file .dp-vname { color: var(--dp-fg); }
+
+.dp-vsubmit {
+  width: 100%;
+  background: #ffd814;
+  color: #111;
+  font-weight: 700;
+  padding: 14px;
+  border-radius: 10px;
+}
+.dp-vsubmit:disabled { opacity: 0.5; cursor: not-allowed; }
+
+.dp-vmsg { border-radius: 10px; padding: 12px 14px; font-size: 0.875rem; line-height: 1.5; }
+.dp-vmsg.ok { background: rgba(59, 130, 246, 0.15); color: #3b82f6; }
+.dp-vmsg.wait { background: rgba(255, 216, 20, 0.15); color: #d4a900; }
+.dp-vmsg.bad { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
