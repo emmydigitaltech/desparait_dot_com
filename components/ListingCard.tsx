@@ -1,4 +1,5 @@
 import Link from "next/link";
+import VerifiedBadge from "@/components/VerifiedBadge";
 
 export type CardListing = {
   id: string;
@@ -40,9 +41,18 @@ export default function ListingCard({ listing }: { listing: CardListing }) {
         <p className="dp-lc-title">{title}</p>
         <p className="dp-lc-price">₦{price.toLocaleString()}</p>
         {off > 0 && <p className="dp-lc-old">₦{original_price!.toLocaleString()}</p>}
-        <p className="dp-lc-meta">
+        <p
+          className="dp-lc-meta"
+          style={{ display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap" }}
+        >
           {condition ? CONDITION_LABEL[condition] ?? condition : ""}
-          {seller?.is_verified ? " · ✔ Verified" : ""}
+          {seller?.is_verified && (
+            <>
+              {condition ? <span>·</span> : null}
+              <VerifiedBadge size={14} />
+              <span>Verified</span>
+            </>
+          )}
         </p>
       </div>
     </Link>

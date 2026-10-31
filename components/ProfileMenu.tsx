@@ -3,8 +3,16 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import SignOutButton from "@/app/components/SignOutButton";
-
-export default function ProfileMenu({ isAdmin = false }: { isAdmin?: boolean }) {
+import Avatar from "@/components/Avatar";
+export default function ProfileMenu({
+  isAdmin = false,
+  avatarUrl = null,
+  name = null,
+}: {
+  isAdmin?: boolean;
+  avatarUrl?: string | null;
+  name?: string | null;
+}) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
 
@@ -27,19 +35,29 @@ export default function ProfileMenu({ isAdmin = false }: { isAdmin?: boolean }) 
     <div className="dp-menu" ref={ref}>
       <button
         type="button"
-        className="dp-btn-o"
+        className="dp-avatar-btn"
         aria-haspopup="menu"
         aria-expanded={open}
+        aria-label="Open profile menu"
         onClick={() => setOpen((o) => !o)}
       >
-        Profile ▾
+        <Avatar url={avatarUrl} name={name} size={32} />
+        <span aria-hidden="true">▾</span>
       </button>
 
       {open && (
-        <div className="dp-menu-list" role="menu" onClick={() => setOpen(false)}>
-          <Link href="/listings" className="dp-menu-item" role="menuitem">My listings</Link>
-          <Link href="/onboarding" className="dp-menu-item" role="menuitem">Edit profile</Link>
+        <div
+          className="dp-menu-list"
+          role="menu"
+          onClick={(e) => {
+            if ((e.target as HTMLElement).closest("a")) setOpen(false);
+          }}
+        >
+          {name && <div className="dp-menu-head">{name}</div>}
+          <Link href="/dashboard" className="dp-menu-item" role="menuitem">Dashboard</Link>
+          <Link href="/dashboard/profile" className="dp-menu-item" role="menuitem">Edit profile</Link>
           <Link href="/listings/new" className="dp-menu-item" role="menuitem">Sell something</Link>
+          <Link href="/verify" className="dp-menu-item" role="menuitem">Get verified</Link>
           {isAdmin && (
             <Link href="/admin" className="dp-menu-item" role="menuitem">Admin</Link>
           )}
