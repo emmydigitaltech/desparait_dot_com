@@ -15,6 +15,16 @@ const CONDITIONS = [
 ];
 
 const MAX_IMAGES = 4;
+const MAX_TAGS = 15;
+
+function mergeTags(prev: string[], raw: string) {
+  const parts = raw
+    .toLowerCase()
+    .split(/[\s,]+/)
+    .map((t) => t.replace(/[^a-z0-9-]/g, "").slice(0, 30))
+    .filter(Boolean);
+  return Array.from(new Set([...prev, ...parts])).slice(0, MAX_TAGS);
+}
 
 export default function NewListingPage() {
   const supabase = createClient();
@@ -28,6 +38,8 @@ export default function NewListingPage() {
     category: "",
     condition: "good",
   });
+  const [tags, setTags] = useState<string[]>([]);
+  const [tagInput, setTagInput] = useState("");
   const [files, setFiles] = useState<File[]>([]);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState("");
@@ -74,6 +86,7 @@ export default function NewListingPage() {
           description: form.description.trim(),
           price: Math.round(Number(form.price)),
           condition: form.condition,
+          tags: mergeTags(tags, tagInput),
           status: "active",
         })
         .select("id")
@@ -147,6 +160,46 @@ export default function NewListingPage() {
             </option>
           ))}
         </select>
+
+        <div>
+          <div className="dp-tags">
+            {tags.map((t) => (
+              <span key={t} className="dp-tag">
+                {t}
+                <button
+                  type="button"
+                  aria-label={`Remove ${t}`}
+                  onClick={() => setTags((p) => p.filter((x) => x !== t))}
+                >
+                  ×
+                </button>
+              </span>
+            ))}
+            <input
+              value={tagInput}
+              placeholder={tags.length ? "" : "Add tags (e.g. iphone, apple, 128gb)"}
+              disabled={tags.length >= MAX_TAGS}
+              onChange={(e) => setTagInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter" || e.key === "," || e.key === " ") {
+                  e.preventDefault();
+                  setTags((p) => mergeTags(p, tagInput));
+                  setTagInput("");
+                } else if (e.key === "Backspace" && !tagInput) {
+                  setTags((p) => p.slice(0, -1));
+                }
+              }}
+              onBlur={() => {
+                setTags((p) => mergeTags(p, tagInput));
+                setTagInput("");
+              }}
+            />
+          </div>
+          <p className="dp-sell-hint">
+            Words buyers might search for. Press space or Enter after each one.{" "}
+            {tags.length}/{MAX_TAGS}
+          </p>
+        </div>
 
         <div>
           <input

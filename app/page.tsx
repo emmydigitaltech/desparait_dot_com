@@ -35,10 +35,10 @@ async function HomeListings() {
 
   return (
     <>
-      {/* "Trending" = newest for now. Swap the order for views/sales if you track them. */}
+      {/* "Trending" = newest 10 for now. Later: rank by likes, reviews and sales. */}
       <h2 className="dp-h2">Trending on campus</h2>
-      <div className="dp-row-scroll">
-        {items.slice(0, 7).map((l) => (
+      <div className="dp-trending">
+        {items.slice(0, 10).map((l) => (
           <ListingCard key={l.id} listing={l} />
         ))}
       </div>
@@ -82,7 +82,7 @@ export default function Home() {
         <HomeListings />
       </Suspense>
 
-      <section className="dp-sell">
+      <section className="dp-cta">
         <div>
           <h3>Got something to sell?</h3>
           <span className="dp-meta">Get a verified seller tick and reach thousands of students.</span>

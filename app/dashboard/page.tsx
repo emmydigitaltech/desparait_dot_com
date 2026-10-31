@@ -2,14 +2,10 @@ import { Suspense } from 'react'
 import { redirect } from 'next/navigation'
 import Link from 'next/link'
 import { createClient } from '@/lib/supabase/server'
+import { getCompletion, MIN_TO_SELL } from '@/lib/completion'
 import { connection } from "next/server";
-
-const STEPS = [
-  { key: 'full_name', label: 'Add your full name' },
-  { key: 'avatar_url', label: 'Add a profile photo' },
-  { key: 'phone', label: 'Add your phone number' },
-  { key: 'campus', label: 'Select your campus' },
-] as const
+import Avatar from '@/components/Avatar'
+import AvatarUploader from '@/components/AvatarUploader'
 
 async function Dashboard() {
   await connection();
@@ -33,9 +29,7 @@ async function Dashboard() {
 
   if (listingsError) console.error('Dashboard listings error:', listingsError)
 
-  const done = STEPS.filter((s) => profile?.[s.key])
-  const pct = Math.round((done.length / STEPS.length) * 100)
-  const missing = STEPS.filter((s) => !profile?.[s.key])
+  const { pct, missing, canSell } = getCompletion(profile)
 
   const category =
     profile?.role === 'admin' ? 'Admin'
@@ -46,10 +40,7 @@ async function Dashboard() {
   return (
     <main className="mx-auto max-w-2xl space-y-6 p-6">
       <header className="flex items-center gap-4">
-        {profile?.avatar_url && (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={profile.avatar_url} alt="" className="h-14 w-14 rounded-full object-cover" />
-        )}
+        <Avatar url={profile?.avatar_url} name={profile?.full_name} size={56} />
         <div>
           <h1 className="text-xl font-semibold">{profile?.full_name ?? user.email}</h1>
           <span className="dp-pill">{category}</span>
@@ -65,9 +56,21 @@ async function Dashboard() {
         </div>
         {missing.length > 0 && (
           <ul className="dp-mut mt-3 list-disc pl-5 text-sm">
-            {missing.map((m) => <li key={m.key}>{m.label}</li>)}
+            {missing.map((m) => (
+              <li key={m.key}>{m.label} (+{m.points}%)</li>
+            ))}
           </ul>
         )}
+        <p className="dp-mut mt-3 text-xs">
+          You need more than {MIN_TO_SELL}% to list products.
+        </p>
+        <div className="mt-4">
+          <AvatarUploader
+            userId={user.id}
+            url={profile?.avatar_url}
+            name={profile?.full_name}
+          />
+        </div>
         <Link href="/dashboard/profile" className="dp-link mt-3 inline-block text-sm">
           Edit profile
         </Link>
@@ -77,7 +80,13 @@ async function Dashboard() {
         {profile?.role === 'admin' ? (
           <Link href="/admin" className="dp-link">Go to admin panel</Link>
         ) : profile?.is_verified ? (
-          <Link href="/listings/new" className="dp-link">Create a listing</Link>
+          canSell ? (
+            <Link href="/listings/new" className="dp-link">Create a listing</Link>
+          ) : (
+            <p className="dp-sell-error text-sm">
+              You&apos;re verified, but your profile must be above {MIN_TO_SELL}% before you can list. Finish the items above.
+            </p>
+          )
         ) : req?.status === 'pending' ? (
           <p className="text-sm">Your seller verification is under review.</p>
         ) : (
@@ -85,7 +94,7 @@ async function Dashboard() {
             {req?.status === 'rejected' && (
               <p className="dp-sell-error mb-2">Rejected: {req.note}</p>
             )}
-            <p className="mb-2 text-sm">Want to sell on campus?</p>
+            <p className="mb-2 text-sm">Want to sell on campus? Verification adds 50% to your profile.</p>
             <Link href="/verify" className="dp-btn">
               {req?.status === 'rejected' ? 'Resubmit verification' : 'Become a verified seller'}
             </Link>
