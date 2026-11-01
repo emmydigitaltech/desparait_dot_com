@@ -14,31 +14,67 @@ async function HomeListings() {
   await connection(); // must come before any Supabase call
 
   const supabase = await createClient();
-  const { data, error } = await supabase
-    .from("listings")
-    .select(LISTING_SELECT)
-    .eq("status", "active")
-    .order("created_at", { ascending: false })
-    .limit(16);
 
-  if (error) {
+  const [latestRes, rankRes] = await Promise.all([
+    // Browse-all grid: newest 16
+    supabase
+      .from("listings")
+      .select(LISTING_SELECT)
+      .eq("status", "active")
+      .order("created_at", { ascending: false })
+      .limit(16),
+    // Trending: ranked ids from the view (likes, reviews, sales)
+    supabase
+      .from("trending_listings")
+      .select("id")
+      .order("score", { ascending: false })
+      .order("created_at", { ascending: false })
+      .limit(10),
+  ]);
+
+  if (latestRes.error) {
     console.error(
       "Home listings error:",
-      error.code,
-      error.message,
-      error.details,
-      error.hint
+      latestRes.error.code,
+      latestRes.error.message,
+      latestRes.error.details,
+      latestRes.error.hint
     );
   }
+  if (rankRes.error) {
+    console.error("Trending rank error:", rankRes.error.code, rankRes.error.message);
+  }
 
-  const items = (data ?? []) as unknown as Listing[];
+  const items = (latestRes.data ?? []) as unknown as Listing[];
+
+  // Load the ranked listings with the normal select, then restore rank order
+  let trending: Listing[] = items.slice(0, 10); // fallback: newest 10
+  const rankedIds = (rankRes.data ?? []).map((r: { id: string }) => r.id);
+
+  if (rankedIds.length > 0) {
+    const { data: rankedRows, error: rankedErr } = await supabase
+      .from("listings")
+      .select(LISTING_SELECT)
+      .in("id", rankedIds);
+
+    if (rankedErr) {
+      console.error("Trending listings error:", rankedErr.code, rankedErr.message);
+    } else {
+      const byId = new Map(
+        ((rankedRows ?? []) as unknown as Listing[]).map((l) => [l.id, l])
+      );
+      const ordered = rankedIds
+        .map((id) => byId.get(id))
+        .filter((l): l is Listing => Boolean(l));
+      if (ordered.length > 0) trending = ordered;
+    }
+  }
 
   return (
     <>
-      {/* "Trending" = newest 10 for now. Later: rank by likes, reviews and sales. */}
       <h2 className="dp-h2">Trending on campus</h2>
       <div className="dp-trending">
-        {items.slice(0, 10).map((l) => (
+        {trending.map((l) => (
           <ListingCard key={l.id} listing={l} />
         ))}
       </div>

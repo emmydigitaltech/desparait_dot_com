@@ -5,6 +5,8 @@ import { useParams } from "next/navigation";
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/client";
 import VerifiedBadge from "@/components/VerifiedBadge";
+import LikeButton from "@/components/LikeButton";
+import SellerReviews from "@/components/SellersReviews";
 
 type Listing = {
   id: string;
@@ -146,6 +148,10 @@ export default function ListingDetailPage() {
             {listing.status !== "active" && <span>{listing.status}</span>}
           </div>
 
+          <div style={{ margin: "10px 0" }}>
+            <LikeButton listingId={listing.id} />
+          </div>
+
           {listing.description && <p className="dp-listing-desc">{listing.description}</p>}
 
           <div className="dp-listing-seller">
@@ -169,6 +175,15 @@ export default function ListingDetailPage() {
               href={waLink(seller.whatsapp, listing.title)}
               target="_blank"
               rel="noopener noreferrer"
+              onClick={async () => {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (user && user.id !== listing.seller_id) {
+                  await supabase.from("listing_contacts").upsert(
+                    { listing_id: listing.id, user_id: user.id },
+                    { onConflict: "listing_id,user_id", ignoreDuplicates: true }
+                  );
+                }
+              }}
             >
               Chat on WhatsApp
             </a>
@@ -177,6 +192,8 @@ export default function ListingDetailPage() {
           )}
         </section>
       </div>
+
+      <SellerReviews sellerId={listing.seller_id} listingId={listing.id} />
     </main>
   );
 }

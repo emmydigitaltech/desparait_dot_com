@@ -6,6 +6,7 @@ import { getCompletion, MIN_TO_SELL } from '@/lib/completion'
 import { connection } from "next/server";
 import Avatar from '@/components/Avatar'
 import AvatarUploader from '@/components/AvatarUploader'
+import MarkSoldButton from '@/components/MarkSoldButton'
 
 async function Dashboard() {
   await connection();
@@ -112,8 +113,8 @@ async function Dashboard() {
         ) : (
           <ul className="space-y-2">
             {myListings.map((l) => (
-              <li key={l.id}>
-                <Link href={`/listings/${l.id}`} className="dp-lrow">
+              <li key={l.id} className="flex flex-wrap items-center gap-2">
+                <Link href={`/listings/${l.id}`} className="dp-lrow min-w-0 flex-1">
                   {l.image_url && (
                     // eslint-disable-next-line @next/next/no-img-element
                     <img src={l.image_url} alt="" className="h-12 w-12 rounded object-cover" />
@@ -123,6 +124,10 @@ async function Dashboard() {
                     <p className="dp-mut text-xs">₦{Number(l.price).toLocaleString()} · {l.status}</p>
                   </div>
                 </Link>
+                <Link href={`/listings/${l.id}/edit`} className="dp-link shrink-0 text-sm">
+                  Edit
+                </Link>
+                {l.status === 'active' && <MarkSoldButton listingId={l.id} />}
               </li>
             ))}
           </ul>
