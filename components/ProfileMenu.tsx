@@ -4,6 +4,7 @@ import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import SignOutButton from "@/app/components/SignOutButton";
 import Avatar from "@/components/Avatar";
+
 export default function ProfileMenu({
   isAdmin = false,
   avatarUrl = null,
@@ -55,7 +56,10 @@ export default function ProfileMenu({
         >
           {name && <div className="dp-menu-head">{name}</div>}
           <Link href="/dashboard" className="dp-menu-item" role="menuitem">Dashboard</Link>
+          <Link href="/listings" className="dp-menu-item" role="menuitem">My listings</Link>
+          <Link href="/messages" className="dp-menu-item" role="menuitem">Messages</Link>
           <Link href="/dashboard/profile" className="dp-menu-item" role="menuitem">Edit profile</Link>
+          <Link href="/settings/bank" className="dp-menu-item" role="menuitem">Payout account</Link>
           <Link href="/listings/new" className="dp-menu-item" role="menuitem">Sell something</Link>
           <Link href="/verify" className="dp-menu-item" role="menuitem">Get verified</Link>
           {isAdmin && (

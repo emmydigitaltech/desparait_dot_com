@@ -7,6 +7,9 @@ import { createClient } from "@/lib/supabase/client";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import LikeButton from "@/components/LikeButton";
 import SellerReviews from "@/components/SellersReviews";
+import AddToCartButton from "@/components/AddToCartButton";
+import StartChatButton from "@/components/StartChatButton";
+
 
 type Listing = {
   id: string;
@@ -169,27 +172,18 @@ export default function ListingDetailPage() {
             </p>
           </div>
 
-          {seller?.whatsapp ? (
-            <a
+          <div className="dp-actions">
+
+
+
+
+            <AddToCartButton listingId={listing.id} />
+            <StartChatButton
+              listingId={listing.id}
+              sellerId={listing.seller_id}
               className="dp-listing-cta"
-              href={waLink(seller.whatsapp, listing.title)}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={async () => {
-                const { data: { user } } = await supabase.auth.getUser();
-                if (user && user.id !== listing.seller_id) {
-                  await supabase.from("listing_contacts").upsert(
-                    { listing_id: listing.id, user_id: user.id },
-                    { onConflict: "listing_id,user_id", ignoreDuplicates: true }
-                  );
-                }
-              }}
-            >
-              Chat on WhatsApp
-            </a>
-          ) : (
-            <p className="dp-listing-muted">Seller contact unavailable.</p>
-          )}
+            />
+          </div>
         </section>
       </div>
 
