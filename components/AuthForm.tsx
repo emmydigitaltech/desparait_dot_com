@@ -13,6 +13,7 @@ export default function AuthForm({ mode, next }: { mode: "login" | "signup"; nex
   const [busy, setBusy] = useState(false);
   const [err, setErr] = useState<string | null>(null);
   const [sent, setSent] = useState(false);
+  const [showPw, setShowPw] = useState(false);
 
   async function submit(e: React.FormEvent) {
     e.preventDefault();
@@ -82,14 +83,29 @@ export default function AuthForm({ mode, next }: { mode: "login" | "signup"; nex
         </label>
         <label>
           Password
-          <input
-            type="password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            minLength={8}
-            autoComplete={isSignup ? "new-password" : "current-password"}
-          />
+          <div className="dp-pw">
+            <input
+              type={showPw ? "text" : "password"}
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              required
+              minLength={8}
+              autoComplete={isSignup ? "new-password" : "current-password"}
+            />
+            <button
+              type="button"
+              className="dp-pw-eye"
+              onClick={() => setShowPw((s) => !s)}
+              aria-label={showPw ? "Hide password" : "Show password"}
+              aria-pressed={showPw}
+            >
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                <path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z" />
+                <circle cx="12" cy="12" r="3" />
+                {showPw && <path d="M3 3l18 18" />}
+              </svg>
+            </button>
+          </div>
         </label>
         {isSignup && <span className="dp-meta">At least 8 characters.</span>}
         {err && <p className="dp-err" role="alert">{err}</p>}

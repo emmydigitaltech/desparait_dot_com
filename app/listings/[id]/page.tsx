@@ -7,6 +7,8 @@ import { createClient } from "@/lib/supabase/client";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import LikeButton from "@/components/LikeButton";
 import SellerReviews from "@/components/SellersReviews";
+import AddToCartButton from "@/components/AddToCartButton";
+import StartChatButton from "@/components/StartChatButton";
 
 type Listing = {
   id: string;
@@ -19,6 +21,7 @@ type Listing = {
   image_url: string | null;
   condition: string | null;
   status: string;
+  review_note: string | null;
   created_at: string;
 };
 
@@ -35,13 +38,6 @@ const CONDITION_LABELS: Record<string, string> = {
   fair: "Fair",
 };
 
-function waLink(raw: string, title: string) {
-  let n = raw.replace(/\D/g, "");
-  if (n.startsWith("0")) n = "234" + n.slice(1);
-  const text = encodeURIComponent(`Hi, I'm interested in "${title}" on Despariat.`);
-  return `https://wa.me/${n}?text=${text}`;
-}
-
 export default function ListingDetailPage() {
   const supabase = createClient();
   const { id } = useParams<{ id: string }>();
@@ -57,7 +53,7 @@ export default function ListingDetailPage() {
     (async () => {
       const { data: l, error: lErr } = await supabase
         .from("listings")
-        .select("id, seller_id, title, description, price, original_price, category, image_url, condition, status, created_at")
+        .select("id, seller_id, title, description, price, original_price, category, image_url, condition, status, review_note, created_at")
         .eq("id", id)
         .maybeSingle();
 
@@ -169,26 +165,22 @@ export default function ListingDetailPage() {
             </p>
           </div>
 
-          {seller?.whatsapp ? (
-            <a
-              className="dp-listing-cta"
-              href={waLink(seller.whatsapp, listing.title)}
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={async () => {
-                const { data: { user } } = await supabase.auth.getUser();
-                if (user && user.id !== listing.seller_id) {
-                  await supabase.from("listing_contacts").upsert(
-                    { listing_id: listing.id, user_id: user.id },
-                    { onConflict: "listing_id,user_id", ignoreDuplicates: true }
-                  );
-                }
-              }}
-            >
-              Chat on WhatsApp
-            </a>
+          {listing.status === "active" ? (
+            <div className="dp-actions">
+              <AddToCartButton listingId={listing.id} />
+              <StartChatButton
+                listingId={listing.id}
+                sellerId={listing.seller_id}
+                className="dp-listing-cta"
+              />
+            </div>
           ) : (
-            <p className="dp-listing-muted">Seller contact unavailable.</p>
+            <p className="dp-listing-muted">
+              {listing.status === "pending" && "Pending approval. Only you can see this listing."}
+              {listing.status === "rejected" &&
+                `This listing was rejected${listing.review_note ? `: ${listing.review_note}` : "."}`}
+              {listing.status === "sold" && "This item has been sold."}
+            </p>
           )}
         </section>
       </div>

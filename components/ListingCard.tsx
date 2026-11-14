@@ -1,5 +1,6 @@
 import Link from "next/link";
 import VerifiedBadge from "@/components/VerifiedBadge";
+import QuickAddButton from "@/components/QuickAddButton";
 
 export type CardListing = {
   id: string;
@@ -27,34 +28,37 @@ export default function ListingCard({ listing }: { listing: CardListing }) {
       : 0;
 
   return (
-    <Link href={`/listings/${id}`} className="dp-lc">
-      <div className="dp-lc-img">
-        {image_url ? (
-          // eslint-disable-next-line @next/next/no-img-element
-          <img src={image_url} alt={title} loading="lazy" />
-        ) : (
-          <span className="dp-lc-noimg">No photo</span>
-        )}
-        {off > 0 && <span className="dp-lc-off">-{off}%</span>}
-      </div>
-      <div className="dp-lc-body">
-        <p className="dp-lc-title">{title}</p>
-        <p className="dp-lc-price">₦{price.toLocaleString()}</p>
-        {off > 0 && <p className="dp-lc-old">₦{original_price!.toLocaleString()}</p>}
-        <p
-          className="dp-lc-meta"
-          style={{ display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap" }}
-        >
-          {condition ? CONDITION_LABEL[condition] ?? condition : ""}
-          {seller?.is_verified && (
-            <>
-              {condition ? <span>·</span> : null}
-              <VerifiedBadge size={14} />
-              <span>Verified</span>
-            </>
+    <div className="dp-lc-wrap">
+      <Link href={`/listings/${id}`} className="dp-lc">
+        <div className="dp-lc-img">
+          {image_url ? (
+            // eslint-disable-next-line @next/next/no-img-element
+            <img src={image_url} alt={title} loading="lazy" />
+          ) : (
+            <span className="dp-lc-noimg">No photo</span>
           )}
-        </p>
-      </div>
-    </Link>
+          {off > 0 && <span className="dp-lc-off">-{off}%</span>}
+        </div>
+        <div className="dp-lc-body">
+          <p className="dp-lc-title">{title}</p>
+          <p className="dp-lc-price">₦{price.toLocaleString()}</p>
+          {off > 0 && <p className="dp-lc-old">₦{original_price!.toLocaleString()}</p>}
+          <p
+            className="dp-lc-meta"
+            style={{ display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap" }}
+          >
+            {condition ? CONDITION_LABEL[condition] ?? condition : ""}
+            {seller?.is_verified && (
+              <>
+                {condition ? <span>·</span> : null}
+                <VerifiedBadge size={14} />
+                <span>Verified</span>
+              </>
+            )}
+          </p>
+        </div>
+      </Link>
+      <QuickAddButton listingId={id} />
+    </div>
   );
 }

@@ -1,8 +1,10 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { getCompletion, MIN_TO_SELL, type MissingItem } from "@/lib/completion";
 
 type Category = { slug: string; label: string; emoji: string | null };
 
@@ -14,7 +16,8 @@ const CONDITIONS = [
   { value: "fair", label: "Fair" },
 ];
 
-const MAX_IMAGES = 4;
+const MIN_IMAGES = 4;
+const MAX_IMAGES = 10;
 const MAX_TAGS = 15;
 
 function mergeTags(prev: string[], raw: string) {
@@ -29,6 +32,10 @@ function mergeTags(prev: string[], raw: string) {
 export default function NewListingPage() {
   const supabase = createClient();
   const router = useRouter();
+  const [checking, setChecking] = useState(true);
+  const [block, setBlock] = useState<{ pct: number; missing: MissingItem[] } | null>(null);
+  const [noBank, setNoBank] = useState(false);
+  const [done, setDone] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [schoolId, setSchoolId] = useState("");
   const [form, setForm] = useState({
@@ -51,25 +58,46 @@ export default function NewListingPage() {
       } = await supabase.auth.getUser();
       if (!user) return router.replace("/");
 
-      const [{ data: p }, { data: c, error: catErr }] = await Promise.all([
-        supabase.from("profiles").select("school_id").eq("id", user.id).maybeSingle(),
+      const [{ data: p }, { data: c, error: catErr }, { count: bankCount }] = await Promise.all([
+        supabase
+          .from("profiles")
+          .select("school_id, full_name, avatar_url, phone, campus, is_verified")
+          .eq("id", user.id)
+          .maybeSingle(),
         supabase.from("categories").select("slug, label, emoji").order("sort_order"),
+        // RLS only returns the caller's own row
+        supabase.from("seller_bank_details").select("*", { count: "exact", head: true }),
       ]);
       if (catErr) setError("Could not load categories: " + catErr.message);
       if (!p?.school_id) return router.replace("/onboarding");
+
+      const completion = getCompletion(p);
+      if (!completion.canSell) setBlock({ pct: completion.pct, missing: completion.missing });
+      setNoBank(!bankCount);
+
       setSchoolId(p.school_id);
       setCategories(c ?? []);
+      setChecking(false);
     })();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   const set = (k: string) => (e: React.ChangeEvent<any>) =>
     setForm((f) => ({ ...f, [k]: e.target.value }));
 
+  function addFiles(list: FileList | null) {
+    const picked = Array.from(list ?? []);
+    setFiles((prev) => [...prev, ...picked].slice(0, MAX_IMAGES));
+  }
+
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
-    if (!files.length) return setError("Add at least one photo.");
+    if (files.length < MIN_IMAGES)
+      return setError(`Add at least ${MIN_IMAGES} photos (you have ${files.length}).`);
     setSaving(true);
+
+    let listingId: string | null = null;
+    const uploaded: string[] = [];
 
     try {
       const {
@@ -87,11 +115,12 @@ export default function NewListingPage() {
           price: Math.round(Number(form.price)),
           condition: form.condition,
           tags: mergeTags(tags, tagInput),
-          status: "active",
+          status: "pending", // the database forces this anyway
         })
         .select("id")
         .single();
       if (insertErr) throw insertErr;
+      listingId = listing.id;
 
       const rows = [];
       for (let i = 0; i < files.length; i++) {
@@ -102,6 +131,7 @@ export default function NewListingPage() {
           .from("listing-images")
           .upload(path, file, { contentType: file.type });
         if (upErr) throw upErr;
+        uploaded.push(path);
         const { data } = supabase.storage.from("listing-images").getPublicUrl(path);
         rows.push({ listing_id: listing.id, url: data.publicUrl, position: i });
       }
@@ -112,11 +142,84 @@ export default function NewListingPage() {
       // cover photo used by the browse page
       await supabase.from("listings").update({ image_url: rows[0].url }).eq("id", listing.id);
 
-      router.push(`/listings/${listing.id}`);
+      setDone(true);
+      setSaving(false);
     } catch (err: any) {
+      // don't leave a half-made listing behind
+      if (uploaded.length) await supabase.storage.from("listing-images").remove(uploaded);
+      if (listingId) await supabase.from("listings").delete().eq("id", listingId);
       setError(err.message ?? "Something went wrong.");
       setSaving(false);
     }
+  }
+
+  if (checking) return <main className="dp-sell"><p className="dp-sell-hint">Loading…</p></main>;
+
+  if (block) {
+    return (
+      <main className="dp-sell">
+        <div className="dp-sell-card">
+          <h1>Complete your profile to start selling</h1>
+          <p className="dp-sell-error">
+            Your profile is {block.pct}% complete. It must be above {MIN_TO_SELL}% before you can list a product.
+          </p>
+          <ul style={{ margin: 0, paddingLeft: 18, fontSize: 14 }}>
+            {block.missing.map((m) => (
+              <li key={m.key}>
+                {m.label} (+{m.points}%)
+              </li>
+            ))}
+          </ul>
+          <Link
+            href="/dashboard"
+            className="dp-sell-btn"
+            style={{ textAlign: "center", textDecoration: "none" }}
+          >
+            Go to my dashboard
+          </Link>
+        </div>
+      </main>
+    );
+  }
+
+  if (noBank) {
+    return (
+      <main className="dp-sell">
+        <div className="dp-sell-card">
+          <h1>Add your payout account first</h1>
+          <p className="dp-sell-hint">
+            Buyers need your bank details to pay you after they inspect the item. Save your account, then come back to list.
+          </p>
+          <Link
+            href="/settings/bank"
+            className="dp-sell-btn"
+            style={{ textAlign: "center", textDecoration: "none" }}
+          >
+            Add payout account
+          </Link>
+        </div>
+      </main>
+    );
+  }
+
+  if (done) {
+    return (
+      <main className="dp-sell">
+        <div className="dp-sell-card">
+          <h1>Sent for review ✅</h1>
+          <p className="dp-sell-hint">
+            Your listing is pending. It goes live once an admin approves it.
+          </p>
+          <Link
+            href="/listings"
+            className="dp-sell-btn"
+            style={{ textAlign: "center", textDecoration: "none" }}
+          >
+            View my listings
+          </Link>
+        </div>
+      </main>
+    );
   }
 
   return (
@@ -206,19 +309,50 @@ export default function NewListingPage() {
             type="file"
             accept="image/*"
             multiple
-            onChange={(e) =>
-              setFiles(Array.from(e.target.files ?? []).slice(0, MAX_IMAGES))
-            }
+            disabled={files.length >= MAX_IMAGES}
+            onChange={(e) => {
+              addFiles(e.target.files);
+              e.target.value = "";
+            }}
           />
           <p className="dp-sell-hint">
-            Up to {MAX_IMAGES} photos. {files.length} selected.
+            {MIN_IMAGES} to {MAX_IMAGES} photos required. {files.length} selected.
           </p>
+          {files.length > 0 && (
+            <div style={{ display: "flex", flexWrap: "wrap", gap: 8, marginTop: 8 }}>
+              {files.map((f, i) => (
+                <div key={`${f.name}-${i}`} style={{ position: "relative" }}>
+                  {/* eslint-disable-next-line @next/next/no-img-element */}
+                  <img
+                    src={URL.createObjectURL(f)}
+                    alt=""
+                    style={{ width: 72, height: 72, objectFit: "cover", borderRadius: 8 }}
+                  />
+                  <button
+                    type="button"
+                    aria-label="Remove photo"
+                    onClick={() => setFiles((p) => p.filter((_, j) => j !== i))}
+                    style={{
+                      position: "absolute", top: -6, right: -6, width: 20, height: 20,
+                      borderRadius: "50%", border: 0, background: "#000", color: "#fff",
+                      cursor: "pointer", lineHeight: "20px", padding: 0,
+                    }}
+                  >
+                    ×
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
         </div>
 
         {error && <p className="dp-sell-error">{error}</p>}
 
-        <button className="dp-sell-btn" disabled={saving || !schoolId}>
-          {saving ? "Publishing..." : "Publish listing"}
+        <button
+          className="dp-sell-btn"
+          disabled={saving || !schoolId || files.length < MIN_IMAGES}
+        >
+          {saving ? "Submitting..." : "Submit for approval"}
         </button>
       </form>
     </main>
