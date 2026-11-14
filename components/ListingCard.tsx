@@ -10,6 +10,7 @@ export type CardListing = {
   image_url: string | null;
   condition?: string | null;
   category: string | null;
+  boosted_until?: string | null;
   seller?: { full_name: string | null; is_verified: boolean | null } | null;
 };
 
@@ -21,11 +22,12 @@ const CONDITION_LABEL: Record<string, string> = {
 };
 
 export default function ListingCard({ listing }: { listing: CardListing }) {
-  const { id, title, price, original_price, image_url, condition, seller } = listing;
+  const { id, title, price, original_price, image_url, condition, seller, boosted_until } = listing;
   const off =
     original_price && original_price > price
       ? Math.round((1 - price / original_price) * 100)
       : 0;
+  const promoted = !!boosted_until && new Date(boosted_until).getTime() > Date.now();
 
   return (
     <div className="dp-lc-wrap">
@@ -38,6 +40,7 @@ export default function ListingCard({ listing }: { listing: CardListing }) {
             <span className="dp-lc-noimg">No photo</span>
           )}
           {off > 0 && <span className="dp-lc-off">-{off}%</span>}
+          {promoted && <span className="dp-lc-promo">Promoted</span>}
         </div>
         <div className="dp-lc-body">
           <p className="dp-lc-title">{title}</p>
