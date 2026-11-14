@@ -19,6 +19,7 @@ export default async function Browse({
   let query = supabase
     .from("listings")
     .select(LISTING_SELECT)
+    .eq("status", "active")
     .order("created_at", { ascending: false });
 
   if (cat) query = query.eq("category", cat);

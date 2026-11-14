@@ -55,6 +55,7 @@ async function HomeListings() {
     const { data: rankedRows, error: rankedErr } = await supabase
       .from("listings")
       .select(LISTING_SELECT)
+      .eq("status", "active")
       .in("id", rankedIds);
 
     if (rankedErr) {
@@ -121,9 +122,9 @@ export default function Home() {
       <section className="dp-cta">
         <div>
           <h3>Got something to sell?</h3>
-          <span className="dp-meta">Get a verified seller tick and reach thousands of students.</span>
+          <span className="dp-meta">List it in minutes and reach thousands of students.</span>
         </div>
-        <Link href="/verify" className="dp-btn">Start selling</Link>
+        <Link href="/listings/new" className="dp-btn">Start selling</Link>
       </section>
     </>
   );

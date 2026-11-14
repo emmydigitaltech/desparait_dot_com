@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { decideRequest } from "./actions";
@@ -20,6 +21,8 @@ export default function AdminPage() {
   const router = useRouter();
   const [loading, setLoading] = useState(true);
   const [items, setItems] = useState<Item[]>([]);
+  const [disputes, setDisputes] = useState(0);
+  const [pendingListings, setPendingListings] = useState(0);
   const [err, setErr] = useState("");
   const [busyId, setBusyId] = useState<string | null>(null);
 
@@ -29,6 +32,18 @@ export default function AdminPage() {
 
     const { data: me } = await supabase.from("profiles").select("role,is_admin").eq("id", user.id).single();
     if (!(me?.is_admin || me?.role === "admin")) return router.replace("/");
+
+    const { count } = await supabase
+      .from("orders")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "disputed");
+    setDisputes(count ?? 0);
+
+    const { count: pl } = await supabase
+      .from("listings")
+      .select("id", { count: "exact", head: true })
+      .eq("status", "pending");
+    setPendingListings(pl ?? 0);
 
     const { data: reqs, error } = await supabase
       .from("verification_requests")
@@ -81,7 +96,15 @@ export default function AdminPage() {
 
   return (
     <main className="mx-auto max-w-2xl p-4">
-      <a href="/admin/users" className="mb-3 inline-block text-sm underline">Manage users</a>
+      <nav className="mb-3 flex gap-4 text-sm">
+        <Link href="/admin/listings" className="underline">
+          Listings{pendingListings > 0 ? ` (${pendingListings})` : ""}
+        </Link>
+        <Link href="/admin/users" className="underline">Manage users</Link>
+        <Link href="/admin/disputes" className="underline">
+          Disputes{disputes > 0 ? ` (${disputes})` : ""}
+        </Link>
+      </nav>
       <h1 className="mb-4 text-xl font-bold">Verification requests ({items.length})</h1>
       {err && <p className="mb-3 rounded bg-red-50 p-3 text-sm text-red-700">{err}</p>}
       {items.length === 0 && <p className="text-gray-600">No pending requests.</p>}
