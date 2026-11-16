@@ -5,6 +5,7 @@ export const CATEGORIES = [
   { slug: "phones", label: "Phones & electronics", emoji: "📱" },
   { slug: "textbooks", label: "Textbooks", emoji: "📚" },
   { slug: "fashion", label: "Fashion & shoes", emoji: "👟" },
+  
   { slug: "food", label: "Food & snacks", emoji: "🍟" },
   { slug: "printing", label: "Printing", emoji: "🖨️" },
   { slug: "supplies", label: "School supplies", emoji: "✏️" },
