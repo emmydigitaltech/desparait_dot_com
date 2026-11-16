@@ -4,7 +4,6 @@ import { useEffect, useState } from "react";
 
 const SLIDES = [
   { tag: "MEET ON CAMPUS", title: "Meet. Inspect. Then pay.", text: "Every deal happens face to face. Check the item in your hands before a single naira changes hands.", emoji: "🤝", cta: "Create free account", href: "/dashboard", bg: "#0a0a0a" },
-  { tag: "BACK TO SCHOOL", title: "Up to 40% off textbooks and past questions", text: "Cheaper than the bookshop, from students who just finished the course.", emoji: "📚", cta: "Shop textbooks", href: "/browse?cat=textbooks", bg: "#1a1a1a" },
   { tag: "TECH DEALS", title: "Phones, earbuds and power banks", text: "Test every device on the spot with verified sellers before you pay.", emoji: "📱", cta: "Shop electronics", href: "/browse?cat=phones", bg: "#262626" },
   { tag: "CAMPUS SERVICES", title: "Braiding, tutoring and printing", text: "Book trusted services close to your hostel.", emoji: "💇", cta: "Browse services", href: "/browse?cat=services", bg: "#111" },
 ];

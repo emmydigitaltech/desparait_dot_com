@@ -52,7 +52,7 @@ export default async function Header() {
         <form action="/browse" className="dp-search" role="search">
           <input
             name="q"
-            placeholder="Search phones, past questions, braiding, printing…"
+            placeholder="Search phones, textbooks, braiding, printing…"            
             aria-label="Search listings"
           />
           <button type="submit">Search</button>
