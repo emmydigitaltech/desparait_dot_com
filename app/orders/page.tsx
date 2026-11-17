@@ -2,17 +2,7 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
-<p className="dp-lc-rate">
-  <Stars rating={Number(rating_avg ?? 0)} />
-  {Number(rating_count ?? 0) > 0 ? (
-    <>
-      <span>{Number(rating_avg).toFixed(1)}</span>
-      <span className="dp-lc-rcount">({Number(rating_count).toLocaleString()})</span>
-    </>
-  ) : (
-    <span className="dp-lc-rcount">No reviews</span>
-  )}
-</p>
+import { createClient } from "@/lib/supabase/server";
 
 type Status = "pending" | "inspected" | "paid_claimed" | "completed" | "cancelled" | "disputed";
 type Order = {
@@ -27,7 +17,7 @@ type Order = {
   created_at: string;
 };
 
-const naira = (n: number) => `₦${n.toLocaleString()}`;
+const naira = (n: number) => `â‚¦${n.toLocaleString()}`;
 const LABEL: Record<Status, string> = {
   pending: "Waiting for inspection",
   inspected: "Ready to pay",
@@ -44,7 +34,7 @@ export default function OrdersPage({
   searchParams: Promise<{ tab?: string }>;
 }) {
   return (
-    <Suspense fallback={<p className="dp-meta" style={{ padding: 16 }}>Loading orders…</p>}>
+    <Suspense fallback={<p className="dp-meta" style={{ padding: 16 }}>Loading ordersâ€¦</p>}>
       <Loader searchParams={searchParams} />
     </Suspense>
   );
@@ -119,7 +109,7 @@ async function Loader({ searchParams }: { searchParams: Promise<{ tab?: string }
       {rows.length === 0 ? (
         <p className="dp-meta">
           {active === "buying"
-            ? "You haven’t bought anything yet."
+            ? "You havenâ€™t bought anything yet."
             : "No one has started an order on your listings yet."}
         </p>
       ) : (
@@ -134,13 +124,13 @@ async function Loader({ searchParams }: { searchParams: Promise<{ tab?: string }
                 style={{ textDecoration: "none", color: "inherit" }}
               >
                 <div className="dp-order-title">
-                  <span>{o.title} · {naira(o.price)}</span>
+                  <span>{o.title} Â· {naira(o.price)}</span>
                   <span className="dp-order-badge">{LABEL[o.status]}</span>
                 </div>
                 <small className="dp-meta">
-                  {active === "buying" ? "Seller" : "Buyer"}: {names.get(otherId) ?? "User"} ·{" "}
+                  {active === "buying" ? "Seller" : "Buyer"}: {names.get(otherId) ?? "User"} Â·{" "}
                   {new Date(o.created_at).toLocaleDateString()}
-                  {myTurn(o) && <strong> · Your turn</strong>}
+                  {myTurn(o) && <strong> Â· Your turn</strong>}
                 </small>
               </Link>
             );

@@ -2,20 +2,10 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { connection } from "next/server";
 import { redirect } from "next/navigation";
-<p className="dp-lc-rate">
-  <Stars rating={Number(rating_avg ?? 0)} />
-  {Number(rating_count ?? 0) > 0 ? (
-    <>
-      <span>{Number(rating_avg).toFixed(1)}</span>
-      <span className="dp-lc-rcount">({Number(rating_count).toLocaleString()})</span>
-    </>
-  ) : (
-    <span className="dp-lc-rcount">No reviews</span>
-  )}
-</p>
+import { createClient } from "@/lib/supabase/server";
 import AuthForm from "@/components/AuthForm";
 
-export const metadata: Metadata = { title: "Create account · Despariat" };
+export const metadata: Metadata = { title: "Create account - Despariat" };
 
 const safe = (n?: string) =>
   n && n.startsWith("/") && !n.startsWith("//") && !n.startsWith("/login") && !n.startsWith("/signup")
