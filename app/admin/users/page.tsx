@@ -6,12 +6,14 @@ import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import VerifyButton from "./VerifyButton";
 import VerifiedBadge from "@/components/VerifiedBadge";
+import UserModerationButtons from "@/components/UserModerationButtons";
 
 type SP = Promise<{ q?: string; filter?: string }>;
+type Restriction = { status: "suspended" | "banned"; until: string | null; reason: string | null };
 
 export default function AdminUsersPage({ searchParams }: { searchParams: SP }) {
   return (
-    <main style={{ maxWidth: 960, margin: "0 auto", padding: 16 }}>
+    <main style={{ maxWidth: 1100, margin: "0 auto", padding: 16 }}>
       <Suspense fallback={<p>Loading users...</p>}>
         <UsersList searchParams={searchParams} />
       </Suspense>
@@ -33,12 +35,25 @@ async function UsersList({ searchParams }: { searchParams: SP }) {
 
   // Data (service role, server-only)
   const admin = await createAdminClient();
-  const [authRes, profRes, listRes, schoolRes] = await Promise.all([
+  const [authRes, profRes, listRes, schoolRes, restrRes] = await Promise.all([
     admin.auth.admin.listUsers({ page: 1, perPage: 1000 }),
     admin.from("profiles").select("id, full_name, school_id, campus, is_verified, role, is_admin"),
     admin.from("listings").select("seller_id"),
     admin.from("schools").select("id, name"), // ignored if the table doesn't exist
+    admin.from("user_restrictions").select("user_id, status, until, reason"),
   ]);
+
+  const now = new Date();
+  const restrictionOf = new Map<string, Restriction>();
+  for (const r of restrRes.data ?? []) {
+    if (!r.until || new Date(r.until) > now) {
+      restrictionOf.set(r.user_id, {
+        status: r.status as "suspended" | "banned",
+        until: r.until,
+        reason: r.reason,
+      });
+    }
+  }
 
   const schools = new Map<string, string>(
     (schoolRes.data ?? []).map((s: any) => [String(s.id), s.name])
@@ -60,6 +75,7 @@ async function UsersList({ searchParams }: { searchParams: SP }) {
       listings: counts.get(u.id) ?? 0,
       verified: !!p?.is_verified,
       admin: !!(p?.is_admin || p?.role === "admin"),
+      restriction: restrictionOf.get(u.id) ?? null,
     };
   });
 
@@ -72,6 +88,8 @@ async function UsersList({ searchParams }: { searchParams: SP }) {
   }
   if (filter === "verified") rows = rows.filter((r) => r.verified);
   if (filter === "unverified") rows = rows.filter((r) => !r.verified);
+  if (filter === "suspended") rows = rows.filter((r) => r.restriction?.status === "suspended");
+  if (filter === "banned") rows = rows.filter((r) => r.restriction?.status === "banned");
   rows.sort((a, b) => +new Date(b.joined) - +new Date(a.joined));
 
   const tab = (key: string, label: string) => (
@@ -122,16 +140,18 @@ async function UsersList({ searchParams }: { searchParams: SP }) {
         </button>
       </form>
 
-      <div style={{ display: "flex", gap: 8, marginBottom: 16 }}>
+      <div style={{ display: "flex", gap: 8, marginBottom: 16, flexWrap: "wrap" }}>
         {tab("all", "All")}
         {tab("verified", "Verified")}
         {tab("unverified", "Unverified")}
+        {tab("suspended", "Suspended")}
+        {tab("banned", "Banned")}
       </div>
 
       {rows.length === 0 && <p style={{ opacity: 0.7 }}>No users match.</p>}
 
       <div style={{ overflowX: "auto" }}>
-        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14, minWidth: 720 }}>
+        <table style={{ width: "100%", borderCollapse: "collapse", fontSize: 14, minWidth: 900 }}>
           <thead>
             <tr style={{ textAlign: "left", borderBottom: "1px solid var(--dp-line)" }}>
               <th style={{ padding: 8 }}>User</th>
@@ -156,9 +176,34 @@ async function UsersList({ searchParams }: { searchParams: SP }) {
                 <td style={{ padding: 8 }}>{r.school}</td>
                 <td style={{ padding: 8 }}>{new Date(r.joined).toISOString().slice(0, 10)}</td>
                 <td style={{ padding: 8 }}>{r.listings}</td>
-                <td style={{ padding: 8 }}>{r.verified ? "Verified" : "Unverified"}</td>
                 <td style={{ padding: 8 }}>
-                  <VerifyButton userId={r.id} verified={r.verified} />
+                  {r.restriction?.status === "banned" && (
+                    <div style={{ color: "#ef4444", fontWeight: 700 }} title={r.restriction.reason ?? ""}>
+                      Banned
+                    </div>
+                  )}
+                  {r.restriction?.status === "suspended" && (
+                    <div style={{ color: "#f59e0b", fontWeight: 700 }} title={r.restriction.reason ?? ""}>
+                      Suspended
+                      {r.restriction.until
+                        ? ` until ${new Date(r.restriction.until).toISOString().slice(0, 10)}`
+                        : ""}
+                    </div>
+                  )}
+                  <div style={r.restriction ? { fontSize: 12, opacity: 0.7 } : undefined}>
+                    {r.verified ? "Verified" : "Unverified"}
+                  </div>
+                </td>
+                <td style={{ padding: 8 }}>
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+                    <VerifyButton userId={r.id} verified={r.verified} />
+                    {!r.admin && r.id !== user.id && (
+                      <UserModerationButtons
+                        userId={r.id}
+                        status={r.restriction?.status ?? "active"}
+                      />
+                    )}
+                  </div>
                 </td>
               </tr>
             ))}
