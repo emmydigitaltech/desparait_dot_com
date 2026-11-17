@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type ReactNode } from "react";
 import Link from "next/link";
 import SignOutButton from "@/app/components/SignOutButton";
 import Avatar from "@/components/Avatar";
@@ -9,10 +9,12 @@ export default function ProfileMenu({
   isAdmin = false,
   avatarUrl = null,
   name = null,
+  bell = null,
 }: {
   isAdmin?: boolean;
   avatarUrl?: string | null;
   name?: string | null;
+  bell?: ReactNode;
 }) {
   const [open, setOpen] = useState(false);
   const ref = useRef<HTMLDivElement>(null);
@@ -46,6 +48,8 @@ export default function ProfileMenu({
         <span aria-hidden="true">▾</span>
       </button>
 
+      {bell}
+
       {open && (
         <div
           className="dp-menu-list"
@@ -58,6 +62,7 @@ export default function ProfileMenu({
           <Link href="/dashboard" className="dp-menu-item" role="menuitem">Dashboard</Link>
           <Link href="/listings" className="dp-menu-item" role="menuitem">My listings</Link>
           <Link href="/messages" className="dp-menu-item" role="menuitem">Messages</Link>
+          <Link href="/notifications" className="dp-menu-item" role="menuitem">Notifications</Link>
           <Link href="/dashboard/profile" className="dp-menu-item" role="menuitem">Edit profile</Link>
           <Link href="/settings/bank" className="dp-menu-item" role="menuitem">Payout account</Link>
           <Link href="/listings/new" className="dp-menu-item" role="menuitem">Sell something</Link>

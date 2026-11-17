@@ -7,6 +7,11 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import VerifyButton from "./VerifyButton";
 import VerifiedBadge from "@/components/VerifiedBadge";
 import UserModerationButtons from "@/components/UserModerationButtons";
+import StrikeButton from "@/components/StrikeButton";
+import { getAdminRole } from "@/lib/admin";
+import { can } from "@/lib/admin-roles";
+import BulkRemoveListings from "@/components/BulkRemoveListings";
+import BlockIdentifiersButton from "@/components/BlockIdentifiersButton";
 
 type SP = Promise<{ q?: string; filter?: string }>;
 type Restriction = { status: "suspended" | "banned"; until: string | null; reason: string | null };
@@ -29,19 +34,29 @@ async function UsersList({ searchParams }: { searchParams: SP }) {
   const supabase = await createClient();
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login");
-  const { data: me } = await supabase
-    .from("profiles").select("role,is_admin").eq("id", user.id).single();
-  if (!(me?.is_admin || me?.role === "admin")) redirect("/");
+  const myRole = await getAdminRole();
+  if (!can(myRole, ["moderator"])) redirect("/");
 
   // Data (service role, server-only)
   const admin = await createAdminClient();
-  const [authRes, profRes, listRes, schoolRes, restrRes] = await Promise.all([
+  const strikeCutoff = new Date(Date.now() - 180 * 86400000).toISOString();
+  const [authRes, profRes, listRes, schoolRes, restrRes, rolesRes, strikeRes] = await Promise.all([
     admin.auth.admin.listUsers({ page: 1, perPage: 1000 }),
-    admin.from("profiles").select("id, full_name, school_id, campus, is_verified, role, is_admin"),
+    admin.from("profiles").select("id, full_name, school_id, campus, is_verified"),
     admin.from("listings").select("seller_id"),
     admin.from("schools").select("id, name"), // ignored if the table doesn't exist
     admin.from("user_restrictions").select("user_id, status, until, reason"),
+    admin.from("admin_roles").select("user_id, role"),
+    admin.from("strikes").select("user_id").is("revoked_at", null).gte("created_at", strikeCutoff),
   ]);
+
+  const roleOf = new Map<string, string>(
+    (rolesRes.data ?? []).map((r: any) => [r.user_id, r.role])
+  );
+  const strikeCount = new Map<string, number>();
+  for (const s of strikeRes.data ?? []) {
+    strikeCount.set(s.user_id, (strikeCount.get(s.user_id) ?? 0) + 1);
+  }
 
   const now = new Date();
   const restrictionOf = new Map<string, Restriction>();
@@ -74,7 +89,9 @@ async function UsersList({ searchParams }: { searchParams: SP }) {
       joined: u.created_at,
       listings: counts.get(u.id) ?? 0,
       verified: !!p?.is_verified,
-      admin: !!(p?.is_admin || p?.role === "admin"),
+      admin: roleOf.has(u.id),
+      adminRole: roleOf.get(u.id) ?? "",
+      strikes: strikeCount.get(u.id) ?? 0,
       restriction: restrictionOf.get(u.id) ?? null,
     };
   });
@@ -169,7 +186,7 @@ async function UsersList({ searchParams }: { searchParams: SP }) {
                   <div style={{ fontWeight: 600, display: "flex", alignItems: "center", gap: 6 }}>
                     {r.name}
                     {r.verified && <VerifiedBadge size={15} />}
-                    {r.admin && <span style={{ fontSize: 11, opacity: 0.7 }}>(admin)</span>}
+                    {r.admin && <span style={{ fontSize: 11, opacity: 0.7 }}>({r.adminRole})</span>}
                   </div>
                   <div style={{ fontSize: 12, opacity: 0.7 }}>{r.email}</div>
                 </td>
@@ -193,15 +210,31 @@ async function UsersList({ searchParams }: { searchParams: SP }) {
                   <div style={r.restriction ? { fontSize: 12, opacity: 0.7 } : undefined}>
                     {r.verified ? "Verified" : "Unverified"}
                   </div>
+                  {r.strikes > 0 && (
+                    <div style={{ fontSize: 12, color: "#f59e0b" }}>
+                      {r.strikes} strike{r.strikes === 1 ? "" : "s"}
+                    </div>
+                  )}
                 </td>
                 <td style={{ padding: 8 }}>
-                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "center" }}>
+                  <div style={{ display: "flex", gap: 6, flexWrap: "wrap", alignItems: "flex-start" }}>
                     <VerifyButton userId={r.id} verified={r.verified} />
                     {!r.admin && r.id !== user.id && (
-                      <UserModerationButtons
-                        userId={r.id}
-                        status={r.restriction?.status ?? "active"}
-                      />
+                      <>
+                        <UserModerationButtons
+                          userId={r.id}
+                          status={r.restriction?.status ?? "active"}
+                        />
+                        {r.restriction?.status !== "banned" && (
+                          <StrikeButton userId={r.id} strikes={r.strikes} />
+                        )
+                        }
+                        {myRole === "super_admin" && r.restriction?.status === "banned" && (
+                          <BlockIdentifiersButton userId={r.id} />
+                        )}
+                        {r.listings > 0 && <BulkRemoveListings userId={r.id} count={r.listings} />
+                        }
+                      </>
                     )}
                   </div>
                 </td>

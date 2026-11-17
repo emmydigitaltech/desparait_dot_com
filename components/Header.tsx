@@ -6,6 +6,7 @@ import ProfileMenu from "./ProfileMenu";
 import ThemeToggle from "./Themetoggle";
 import CartIcon from "./CartIcon";
 import MessageIcon from "./MessageIcon";
+import NotificationBell from "@/components/NotificationBell";
 
 export default async function Header() {
   await connection(); // must come before any Supabase call
@@ -21,20 +22,22 @@ export default async function Header() {
   let cartCount = 0;
   let unreadCount = 0;
   if (user) {
-    const [{ data: profile }, { count: cart }, { count: unread }] = await Promise.all([
-      supabase
-        .from("profiles")
-        .select("is_admin, avatar_url, full_name")
-        .eq("id", user.id)
-        .single(),
-      supabase.from("cart_items").select("id", { count: "exact", head: true }),
-      supabase
-        .from("messages")
-        .select("id", { count: "exact", head: true })
-        .is("read_at", null)
-        .neq("sender_id", user.id),
-    ]);
-    isAdmin = !!profile?.is_admin;
+    const [{ data: profile }, { count: cart }, { count: unread }, { data: adminRole }] =
+      await Promise.all([
+        supabase
+          .from("profiles")
+          .select("avatar_url, full_name")
+          .eq("id", user.id)
+          .single(),
+        supabase.from("cart_items").select("id", { count: "exact", head: true }),
+        supabase
+          .from("messages")
+          .select("id", { count: "exact", head: true })
+          .is("read_at", null)
+          .neq("sender_id", user.id),
+        supabase.rpc("current_admin_role"),
+      ]);
+    isAdmin = !!adminRole;
     avatarUrl = profile?.avatar_url ?? null;
     fullName = profile?.full_name ?? null;
     cartCount = cart ?? 0;
@@ -52,7 +55,7 @@ export default async function Header() {
         <form action="/browse" className="dp-search" role="search">
           <input
             name="q"
-            placeholder="Search phones, textbooks, braiding, printing…"            
+            placeholder="Search phones, textbooks, braiding, printing…"
             aria-label="Search listings"
           />
           <button type="submit">Search</button>
@@ -72,8 +75,7 @@ export default async function Header() {
                 {cartCount > 0 && <span className="dp-cart-badge">{cartCount}</span>}
               </Link>
               <Link href="/listings/new" className="dp-btn dp-hide-sm">Sell something</Link>
-              <ProfileMenu isAdmin={isAdmin} avatarUrl={avatarUrl} name={fullName} />
-            </>
+              <ProfileMenu isAdmin={isAdmin} avatarUrl={avatarUrl} name={fullName} bell={<NotificationBell />} />            </>
           ) : (
             <>
               <Link href="/login" className="dp-btn-o">Sign in</Link>

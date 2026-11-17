@@ -9,6 +9,7 @@ import LikeButton from "@/components/LikeButton";
 import SellerReviews from "@/components/SellersReviews";
 import AddToCartButton from "@/components/AddToCartButton";
 import StartChatButton from "@/components/StartChatButton";
+import ReportButton from "@/components/ReportButton";
 
 type Listing = {
   id: string;
@@ -46,11 +47,15 @@ export default function ListingDetailPage() {
   const [images, setImages] = useState<string[]>([]);
   const [active, setActive] = useState(0);
   const [seller, setSeller] = useState<Seller | null>(null);
+  const [meId, setMeId] = useState<string | null>(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
 
   useEffect(() => {
     (async () => {
+      const { data: { user } } = await supabase.auth.getUser();
+      setMeId(user?.id ?? null);
+
       const { data: l, error: lErr } = await supabase
         .from("listings")
         .select("id, seller_id, title, description, price, original_price, category, image_url, condition, status, review_note, created_at")
@@ -96,6 +101,8 @@ export default function ListingDetailPage() {
         <Link href="/" className="dp-listing-back">← Back to browse</Link>
       </main>
     );
+
+  const canReport = !!meId && meId !== listing.seller_id;
 
   return (
     <main className="dp-listing">
@@ -181,6 +188,13 @@ export default function ListingDetailPage() {
                 `This listing was rejected${listing.review_note ? `: ${listing.review_note}` : "."}`}
               {listing.status === "sold" && "This item has been sold."}
             </p>
+          )}
+
+          {canReport && (
+            <div style={{ display: "flex", gap: 16, flexWrap: "wrap", marginTop: 14 }}>
+              <ReportButton type="listing" targetId={listing.id} />
+              <ReportButton type="user" targetId={listing.seller_id} />
+            </div>
           )}
         </section>
       </div>

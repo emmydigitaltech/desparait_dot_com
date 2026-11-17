@@ -3,6 +3,7 @@ import { useEffect, useState } from "react";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
+import { can, type AdminRole } from "@/lib/admin-roles";
 
 type Item = {
   id: string;
@@ -28,8 +29,8 @@ export default function AdminListingsPage() {
   async function load() {
     const { data: { user } } = await supabase.auth.getUser();
     if (!user) return router.replace("/");
-    const { data: me } = await supabase.from("profiles").select("role,is_admin").eq("id", user.id).single();
-    if (!(me?.is_admin || me?.role === "admin")) return router.replace("/");
+    const { data: role } = await supabase.rpc("current_admin_role");
+    if (!can(role as AdminRole | null, ["moderator"])) return router.replace("/");
 
     const { data: ls, error } = await supabase
       .from("listings")

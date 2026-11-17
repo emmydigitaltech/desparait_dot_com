@@ -2,7 +2,17 @@ import Link from "next/link";
 import { redirect } from "next/navigation";
 import { connection } from "next/server";
 import { Suspense } from "react";
-import { createClient } from "@/lib/supabase/server";
+<p className="dp-lc-rate">
+  <Stars rating={Number(rating_avg ?? 0)} />
+  {Number(rating_count ?? 0) > 0 ? (
+    <>
+      <span>{Number(rating_avg).toFixed(1)}</span>
+      <span className="dp-lc-rcount">({Number(rating_count).toLocaleString()})</span>
+    </>
+  ) : (
+    <span className="dp-lc-rcount">No reviews</span>
+  )}
+</p>
 
 type Status = "pending" | "inspected" | "paid_claimed" | "completed" | "cancelled" | "disputed";
 type Order = {

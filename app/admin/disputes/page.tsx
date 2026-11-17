@@ -1,7 +1,10 @@
 import { Suspense } from "react";
 import { connection } from "next/server";
-import { notFound, redirect } from "next/navigation";
+import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { createAdminClient } from "@/lib/supabase/admin";
+import { getAdminRole } from "@/lib/admin";
+import { can } from "@/lib/admin-roles";
 import ResolveButtons from "@/components/ResolveButtons";
 
 type Order = {
@@ -39,10 +42,14 @@ async function Loader() {
   const { data: { user } } = await supabase.auth.getUser();
   if (!user) redirect("/login?next=/admin/disputes");
 
-  const { data: me } = await supabase.from("profiles").select("is_admin").eq("id", user.id).single();
-  if (!me?.is_admin) notFound();
+  const role = await getAdminRole();
+  if (!can(role, ["support"])) redirect("/");
 
-  const { data: orders } = await supabase
+  // role verified above; read with the service role so support staff
+  // don't depend on per-table RLS policies
+  const admin = await createAdminClient();
+
+  const { data: orders } = await admin
     .from("orders")
     .select("id, title, price, buyer_id, seller_id, conversation_id, updated_at")
     .eq("status", "disputed")
@@ -54,8 +61,8 @@ async function Loader() {
   if (list.length) {
     const ids = [...new Set(list.flatMap((o) => [o.buyer_id, o.seller_id]))];
     const [{ data: profs }, { data: msgs }] = await Promise.all([
-      supabase.from("profiles").select("id, full_name, whatsapp").in("id", ids),
-      supabase
+      admin.from("profiles").select("id, full_name, whatsapp").in("id", ids),
+      admin
         .from("messages")
         .select("conversation_id, sender_id, body, created_at, kind")
         .in("conversation_id", list.map((o) => o.conversation_id))
