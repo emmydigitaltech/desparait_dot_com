@@ -1090,3 +1090,35 @@ main.dp-chat {
   position: absolute; left: 0; top: 0; overflow: hidden;
   white-space: nowrap; color: var(--dp-star);
 }
+
+/* ===== Uniform tiles ===== */
+.dp-lc-img { aspect-ratio: 1 / 1; }
+.dp-lc-img img { object-fit: cover; object-position: center; padding: 0; }
+
+/* fixed slots: price / title (2 lines) / stars / condition+verified */
+.dp-lc-body {
+  display: grid;
+  grid-template-rows: 30px 2.7em 20px 20px;
+  gap: 4px;
+  align-content: start;
+  padding: 10px 12px 14px;
+}
+.dp-lc-price {
+  display: flex; align-items: baseline; gap: 8px;
+  margin: 0; white-space: nowrap; overflow: hidden;
+}
+.dp-lc-old { margin: 0; font-size: 12px; font-weight: 400; }
+.dp-lc-title {
+  margin: 0; min-height: 0; font-size: 14px; line-height: 1.35;
+  display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;
+}
+.dp-lc-rate { margin: 0; align-self: center; }
+.dp-lc-meta { margin: 0; min-height: 0; align-self: center; white-space: nowrap; overflow: hidden; }
+
+/* Sponsored label sits on the image so it never shifts the text rows */
+.dp-lc-promo {
+  left: 8px; bottom: 8px;
+  background: rgba(0, 0, 0, .7); color: #fff;
+  font-size: 10px; font-weight: 600; letter-spacing: .03em;
+  padding: 2px 6px; border-radius: 4px;
+}
