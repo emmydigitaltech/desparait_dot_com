@@ -11,12 +11,9 @@ export type CardListing = {
   condition?: string | null;
   category: string | null;
   boosted_until?: string | null;
-  seller?: {
-    full_name: string | null;
-    is_verified: boolean | null;
-    rating_avg?: number | null;
-    rating_count?: number | null;
-  } | null;
+  rating_avg?: number | null;
+  rating_count?: number | null;
+  seller?: { full_name: string | null; is_verified: boolean | null } | null;
 };
 
 const CONDITION_LABEL: Record<string, string> = {
@@ -39,7 +36,7 @@ function Stars({ rating }: { rating: number }) {
 export default function ListingCard({ listing }: { listing: CardListing }) {
   const {
     id, title, price, original_price, image_url, condition,
-    seller, boosted_until,
+    seller, boosted_until, rating_avg, rating_count,
   } = listing;
   const off =
     original_price && original_price > price
@@ -70,8 +67,8 @@ export default function ListingCard({ listing }: { listing: CardListing }) {
           </p>
           <p className="dp-lc-title">{title}</p>
           <p className="dp-lc-rate">
-            <Stars rating={Number(seller?.rating_avg ?? 0)} />
-            <span>{Number(seller?.rating_count ?? 0).toLocaleString()}</span>
+            <Stars rating={Number(rating_avg ?? 0)} />
+            <span>{Number(rating_count ?? 0).toLocaleString()}</span>
           </p>
           <p
             className="dp-lc-meta"
