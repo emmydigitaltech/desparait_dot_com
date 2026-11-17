@@ -68,7 +68,14 @@ export default function ListingCard({ listing }: { listing: CardListing }) {
           <p className="dp-lc-title">{title}</p>
           <p className="dp-lc-rate">
             <Stars rating={Number(rating_avg ?? 0)} />
-            <span>{Number(rating_count ?? 0).toLocaleString()}</span>
+            {Number(rating_count ?? 0) > 0 ? (
+              <>
+                <span>{Number(rating_avg).toFixed(1)}</span>
+                <span className="dp-lc-rcount">({Number(rating_count).toLocaleString()})</span>
+              </>
+            ) : (
+              <span className="dp-lc-rcount">No reviews</span>
+            )}
           </p>
           <p
             className="dp-lc-meta"
