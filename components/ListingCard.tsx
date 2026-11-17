@@ -11,6 +11,8 @@ export type CardListing = {
   condition?: string | null;
   category: string | null;
   boosted_until?: string | null;
+  rating?: number | null;
+  rating_count?: number | null;
   seller?: { full_name: string | null; is_verified: boolean | null } | null;
 };
 
@@ -21,8 +23,21 @@ const CONDITION_LABEL: Record<string, string> = {
   fair: "Fair",
 };
 
+function Stars({ rating }: { rating: number }) {
+  const pct = Math.max(0, Math.min(100, (rating / 5) * 100));
+  return (
+    <span className="dp-stars" role="img" aria-label={`${rating.toFixed(1)} out of 5 stars`}>
+      <span className="dp-stars-fill" style={{ width: `${pct}%` }}>★★★★★</span>
+      ★★★★★
+    </span>
+  );
+}
+
 export default function ListingCard({ listing }: { listing: CardListing }) {
-  const { id, title, price, original_price, image_url, condition, seller, boosted_until } = listing;
+  const {
+    id, title, price, original_price, image_url, condition,
+    seller, boosted_until, rating, rating_count,
+  } = listing;
   const off =
     original_price && original_price > price
       ? Math.round((1 - price / original_price) * 100)
@@ -40,12 +55,19 @@ export default function ListingCard({ listing }: { listing: CardListing }) {
             <span className="dp-lc-noimg">No photo</span>
           )}
           {off > 0 && <span className="dp-lc-off">-{off}%</span>}
-          {promoted && <span className="dp-lc-promo">Promoted</span>}
         </div>
         <div className="dp-lc-body">
-          <p className="dp-lc-title">{title}</p>
-          <p className="dp-lc-price">₦{price.toLocaleString()}</p>
+          {promoted && <p className="dp-lc-spons">Sponsored</p>}
+          <p className="dp-lc-price">
+            <span className="dp-lc-cur">₦</span>
+            {price.toLocaleString()}
+          </p>
           {off > 0 && <p className="dp-lc-old">₦{original_price!.toLocaleString()}</p>}
+          <p className="dp-lc-title">{title}</p>
+          <p className="dp-lc-rate">
+            <Stars rating={Number(rating ?? 0)} />
+            <span>{Number(rating_count ?? 0).toLocaleString()}</span>
+          </p>
           <p
             className="dp-lc-meta"
             style={{ display: "flex", alignItems: "center", gap: 4, flexWrap: "wrap" }}
