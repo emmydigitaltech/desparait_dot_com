@@ -10,6 +10,7 @@ import CategoryChips from "@/components/CategoryChips";
 import ListingCard from "@/components/ListingCard";
 import ListingGrid from "@/components/ListingGrid";
 
+
 async function HomeListings() {
   await connection(); // must come before any Supabase call
 
@@ -45,7 +46,21 @@ async function HomeListings() {
     console.error("Trending rank error:", rankRes.error.code, rankRes.error.message);
   }
 
-  const items = (latestRes.data ?? []) as unknown as Listing[];
+  const nowIso = new Date().toISOString();
+  const { data: boostedData } = await supabase
+    .from("listings")
+    .select(LISTING_SELECT)
+    .eq("status", "active")
+    .gt("boosted_until", nowIso)
+    .order("boosted_until", { ascending: false })
+    .limit(4); // cap so paid items don't flood the feed
+
+  const boosted = (boostedData ?? []) as unknown as Listing[];
+  const boostedIds = new Set(boosted.map((b) => b.id));
+  const items = [
+    ...boosted,
+    ...((latestRes.data ?? []) as unknown as Listing[]).filter((l) => !boostedIds.has(l.id)),
+  ].slice(0, 16);
 
   // Load the ranked listings with the normal select, then restore rank order
   let trending: Listing[] = items.slice(0, 10); // fallback: newest 10
@@ -70,6 +85,7 @@ async function HomeListings() {
       if (ordered.length > 0) trending = ordered;
     }
   }
+  trending = [...boosted, ...trending.filter((l) => !boostedIds.has(l.id))].slice(0, 10);
 
   return (
     <>
