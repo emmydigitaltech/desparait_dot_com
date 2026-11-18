@@ -6,6 +6,7 @@ import { createAdminClient } from "@/lib/supabase/admin";
 import { getAdminRole } from "@/lib/admin";
 import { can } from "@/lib/admin-roles";
 import ResolveButtons from "@/components/ResolveButtons";
+import Splash from "@/components/Splash";
 
 type Order = {
   id: string;

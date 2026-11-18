@@ -6,6 +6,7 @@ import { useParams, useRouter } from "next/navigation";
 import { config } from "@fortawesome/fontawesome-svg-core";
 import "@fortawesome/fontawesome-svg-core/styles.css";
 import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import Splash from "@/components/Splash";
 import {
   faPaperclip,
   faMicrophone,

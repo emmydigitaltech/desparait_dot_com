@@ -5,6 +5,7 @@ import Link from "next/link";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { getCompletion, MIN_TO_SELL, type MissingItem } from "@/lib/completion";
+import Splash from "@/components/Splash";
 
 type Category = { slug: string; label: string; emoji: string | null };
 
