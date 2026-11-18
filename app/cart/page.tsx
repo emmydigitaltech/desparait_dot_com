@@ -58,8 +58,7 @@ export default function CartPage() {
     router.refresh();
   }
 
-  if (loading) return <p className="dp-meta" style={{ padding: 24 }}>if (loading) return <Splash />;</p>;
-
+if (loading) return <Splash />;
   const valid = items.filter((i) => i.listings);
   const total = valid.reduce((s, i) => s + i.listings!.price, 0);
   const bySeller = valid.reduce<Record<string, Item[]>>((acc, i) => {

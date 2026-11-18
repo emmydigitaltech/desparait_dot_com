@@ -115,7 +115,7 @@ async function Loader() {
 
 export default function Page() {
   return (
-    <Suspense fallback={<p className="dp-meta" style={{ padding: 24 }}>if (loading) return <Splash />;</p>}>
+    <Suspense fallback={<Splash />}>
       <Loader />
     </Suspense>
   );

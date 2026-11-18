@@ -70,7 +70,7 @@ export default function ProfileMenu({
           {isAdmin && (
             <Link href="/admin" className="dp-menu-item" role="menuitem">Admin</Link>
           )}
-          <SignOutButton className="dp-menu-item" />
+          <SignOutButton className="dp-menu-item dp-logout" />
         </div>
       )}
     </div>

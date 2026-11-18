@@ -69,8 +69,7 @@ export default function InboxPage() {
     })();
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  if (loading) return <p className="dp-meta" style={{ padding: 24 }}>if (loading) return <Splash />;</p>;
-
+if (loading) return <Splash />;
   return (
     <main className="dp-inbox">
       <h1>Messages</h1>

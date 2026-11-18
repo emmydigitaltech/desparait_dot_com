@@ -345,8 +345,7 @@ export default function ThreadPage() {
     await sendAttachment(file, "audio", "", seconds);
   }
 
-  if (loading) return <p className="dp-meta" style={{ padding: 24 }}>if (loading) return <Splash />;</p>;
-  if (!conv) return (
+if (loading) return <Splash />;  if (!conv) return (
     <div className="dp-chat">
       <p className="dp-err">{err}</p>
       <Link href="/messages">← Back to messages</Link>

@@ -1,6 +1,6 @@
 import { NextResponse } from "next/server";
 import { createClient } from "@/lib/supabase/server";
-import { createAdminClient } from "@/lib/supabase/admin"; // use whatever admin.ts exports
+import { createAdminClient } from "@/lib/supabase/admin";
 
 export async function POST(req: Request) {
   const supabase = await createClient();
@@ -27,6 +27,10 @@ export async function POST(req: Request) {
   });
   if (error) return NextResponse.json({ error: "Could not start payment" }, { status: 500 });
 
+  // always send the buyer back to the same site they paid from
+  const origin = new URL(req.url).origin;
+  const callbackUrl = `${origin}/pay/return?next=${encodeURIComponent(`/dashboard?paid=${reference}`)}`;
+
   const res = await fetch("https://api.paystack.co/transaction/initialize", {
     method: "POST",
     headers: {
@@ -37,7 +41,7 @@ export async function POST(req: Request) {
       email: user.email,
       amount: product.price_kobo,
       reference,
-      callback_url: `${process.env.NEXT_PUBLIC_SITE_URL}/dashboard?paid=${reference}`,
+      callback_url: callbackUrl,
     }),
   });
   const json = await res.json();

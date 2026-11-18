@@ -1184,12 +1184,24 @@ main.dp-chat {
 .dp-att-ph-audio { height: 40px; }
 
 /* ---- splash ---- */
-.dp-splash { display: grid; place-items: center; min-height: 50vh; width: 100%; }
+.dp-splash { display: grid; place-items: center; width: 100%; }
+
+/* inline (page loading): centred in the content area, fades in only if loading is slow */
+.dp-splash:not(.dp-splash--overlay) {
+  min-height: calc(100dvh - var(--dp-header-h, 64px));
+  opacity: 0;
+  animation: dp-splash-in .25s ease .2s forwards;
+}
+.dp-splash--warm:not(.dp-splash--overlay) { opacity: 1; animation: none; }
+@keyframes dp-splash-in { to { opacity: 1; } }
+
+/* overlay (clicks / actions): the provider already delays it by 120ms */
 .dp-splash--overlay {
   position: fixed; inset: 0; z-index: 9999; min-height: 0;
   background: color-mix(in srgb, var(--dp-bg, #0a0a0a) 82%, transparent);
   backdrop-filter: blur(3px);
 }
+
 .dp-splash img { object-fit: contain; animation: dp-splash 1.2s ease-in-out infinite; }
 @keyframes dp-splash {
   0%, 100% { opacity: .45; transform: scale(.92); filter: grayscale(1); }
@@ -1197,4 +1209,23 @@ main.dp-chat {
 }
 @media (prefers-reduced-motion: reduce) {
   .dp-splash img { animation: none; opacity: .85; }
+}
+
+
+.dp-body { min-height: 100dvh; display: flex; flex-direction: column; }
+.dp-body > * { flex-shrink: 0; }
+.dp-main { flex: 1 0 auto; width: 100%; }
+
+
+.dp-menu .dp-logout,
+.dp-logout {
+  background: #d32f2f;
+  color: #fff;
+  font-weight: 600;
+  border-radius: 8px;
+}
+.dp-menu .dp-logout:hover,
+.dp-logout:hover {
+  background: #b71c1c;
+  color: #fff;
 }

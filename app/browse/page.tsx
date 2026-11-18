@@ -4,8 +4,10 @@ import { LISTING_SELECT, type Listing } from "@/lib/types";
 import { catBySlug } from "@/lib/categories";
 import CategoryChips from "@/components/CategoryChips";
 import ListingGrid from "@/components/ListingGrid";
+import { Suspense } from "react";
+import Splash from "@/components/Splash";
 
-export default async function Browse({
+async function Browse({
   searchParams,
 }: {
   searchParams: Promise<{ q?: string; cat?: string }>;
@@ -54,5 +56,17 @@ export default async function Browse({
       <CategoryChips active={cat} q={q} />
       <ListingGrid items={items} />
     </>
+  );
+}
+
+export default function Page({
+  searchParams,
+}: {
+  searchParams: Promise<{ q?: string; cat?: string }>;
+}) {
+  return (
+    <Suspense fallback={<Splash />}>
+      <Browse searchParams={searchParams} />
+    </Suspense>
   );
 }
