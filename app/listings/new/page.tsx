@@ -19,6 +19,8 @@ const CONDITIONS = [
 const MIN_IMAGES = 4;
 const MAX_IMAGES = 10;
 const MAX_TAGS = 15;
+const LIMIT_MSG =
+  "You can post 3 listings per 24 hours until your account is verified. Get verified to remove this limit.";
 
 function mergeTags(prev: string[], raw: string) {
   const parts = raw
@@ -38,6 +40,8 @@ export default function NewListingPage() {
   const [done, setDone] = useState(false);
   const [categories, setCategories] = useState<Category[]>([]);
   const [schoolId, setSchoolId] = useState("");
+  // null = no limit (verified or admin)
+  const [left, setLeft] = useState<number | null>(null);
   const [form, setForm] = useState({
     title: "",
     description: "",
@@ -58,22 +62,25 @@ export default function NewListingPage() {
       } = await supabase.auth.getUser();
       if (!user) return router.replace("/");
 
-      const [{ data: p }, { data: c, error: catErr }, { count: bankCount }] = await Promise.all([
-        supabase
-          .from("profiles")
-          .select("school_id, full_name, avatar_url, phone, campus, is_verified")
-          .eq("id", user.id)
-          .maybeSingle(),
-        supabase.from("categories").select("slug, label, emoji").order("sort_order"),
-        // RLS only returns the caller's own row
-        supabase.from("seller_bank_details").select("*", { count: "exact", head: true }),
-      ]);
+      const [{ data: p }, { data: c, error: catErr }, { count: bankCount }, { data: leftData }] =
+        await Promise.all([
+          supabase
+            .from("profiles")
+            .select("school_id, full_name, avatar_url, phone, campus, is_verified")
+            .eq("id", user.id)
+            .maybeSingle(),
+          supabase.from("categories").select("slug, label, emoji").order("sort_order"),
+          // RLS only returns the caller's own row
+          supabase.from("seller_bank_details").select("*", { count: "exact", head: true }),
+          supabase.rpc("listings_left_today"),
+        ]);
       if (catErr) setError("Could not load categories: " + catErr.message);
       if (!p?.school_id) return router.replace("/onboarding");
 
       const completion = getCompletion(p);
       if (!completion.canSell) setBlock({ pct: completion.pct, missing: completion.missing });
       setNoBank(!bankCount);
+      setLeft(typeof leftData === "number" ? leftData : null);
 
       setSchoolId(p.school_id);
       setCategories(c ?? []);
@@ -92,6 +99,7 @@ export default function NewListingPage() {
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+    if (left === 0) return setError(LIMIT_MSG);
     if (files.length < MIN_IMAGES)
       return setError(`Add at least ${MIN_IMAGES} photos (you have ${files.length}).`);
     setSaving(true);
@@ -142,13 +150,20 @@ export default function NewListingPage() {
       // cover photo used by the browse page
       await supabase.from("listings").update({ image_url: rows[0].url }).eq("id", listing.id);
 
+      if (left !== null) setLeft(Math.max(0, left - 1));
       setDone(true);
       setSaving(false);
     } catch (err: any) {
       // don't leave a half-made listing behind
       if (uploaded.length) await supabase.storage.from("listing-images").remove(uploaded);
       if (listingId) await supabase.from("listings").delete().eq("id", listingId);
-      setError(err.message ?? "Something went wrong.");
+
+      if (String(err?.message ?? "").includes("daily_listing_limit")) {
+        setLeft(0);
+        setError(LIMIT_MSG);
+      } else {
+        setError(err.message ?? "Something went wrong.");
+      }
       setSaving(false);
     }
   }
@@ -226,6 +241,14 @@ export default function NewListingPage() {
     <main className="dp-sell">
       <form onSubmit={submit} className="dp-sell-card">
         <h1>Sell something</h1>
+
+        {left !== null && (
+          <p className={left === 0 ? "dp-sell-error" : "dp-sell-hint"}>
+            {left === 0
+              ? LIMIT_MSG
+              : `${left} of 3 listings left in the next 24 hours. Get verified to remove this limit.`}
+          </p>
+        )}
 
         <input
           required
@@ -350,7 +373,7 @@ export default function NewListingPage() {
 
         <button
           className="dp-sell-btn"
-          disabled={saving || !schoolId || files.length < MIN_IMAGES}
+          disabled={saving || !schoolId || files.length < MIN_IMAGES || left === 0}
         >
           {saving ? "Submitting..." : "Submit for approval"}
         </button>

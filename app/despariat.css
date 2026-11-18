@@ -1122,3 +1122,34 @@ main.dp-chat {
   font-size: 10px; font-weight: 600; letter-spacing: .03em;
   padding: 2px 6px; border-radius: 4px;
 }
+
+/* ---- chat: pinned composer + attachments ---- */
+.dp-chat { display: flex; flex-direction: column; min-height: calc(100dvh - var(--dp-header-h, 64px)); height: auto; overflow: visible; }
+.dp-chat-body { flex: 1; overflow: visible; max-height: none; }
+.dp-chat-end { scroll-margin-bottom: 120px; }
+
+.dp-chat-compose { position: sticky; bottom: 0; z-index: 20; background: var(--dp-bg, #fff); border-top: 1px solid var(--dp-line, #e5e5e5); padding-bottom: env(safe-area-inset-bottom); }
+.dp-chat-compose .dp-chat-form { position: static; border: 0; margin: 0; display: flex; align-items: flex-end; gap: 8px; padding: 8px 12px; }
+.dp-chat-compose .dp-chat-form textarea { flex: 1; min-height: 40px; max-height: 120px; field-sizing: content; }
+.dp-chat-compose .dp-err { margin: 0; padding: 6px 12px; }
+
+.dp-icon-btn { width: 40px; height: 40px; flex: none; border: 0; border-radius: 50%; background: var(--dp-soft, #f3f3f3); font-size: 18px; line-height: 1; cursor: pointer; }
+.dp-icon-btn:disabled { opacity: .5; cursor: default; }
+
+.dp-pending { display: flex; align-items: center; gap: 8px; padding: 8px 12px 0; }
+.dp-pending img { width: 64px; height: 64px; object-fit: cover; border-radius: 8px; }
+.dp-pending-file { font-size: 14px; word-break: break-all; }
+
+.dp-rec { align-items: center; }
+.dp-rec-dot { width: 10px; height: 10px; border-radius: 50%; background: #d00; animation: dp-blink 1s infinite; }
+.dp-rec-time { font-variant-numeric: tabular-nums; font-weight: 600; }
+.dp-rec-hint { flex: 1; color: #777; font-size: 14px; }
+@keyframes dp-blink { 50% { opacity: .25; } }
+
+.dp-bubble img { display: block; max-width: min(240px, 100%); max-height: 300px; border-radius: 8px; margin-bottom: 4px; }
+.dp-bubble audio { display: block; width: 220px; max-width: 100%; height: 40px; margin-bottom: 4px; }
+.dp-file { display: flex; align-items: center; gap: 8px; padding: 8px; border-radius: 8px; background: rgba(0,0,0,.06); color: inherit; text-decoration: none; margin-bottom: 4px; }
+.dp-file strong { display: block; font-size: 14px; word-break: break-all; }
+.dp-file small { display: block; opacity: .7; }
+.dp-att-ph { width: 200px; height: 140px; border-radius: 8px; background: rgba(0,0,0,.08); margin-bottom: 4px; }
+.dp-att-ph-audio { height: 40px; }

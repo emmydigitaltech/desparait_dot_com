@@ -1,4 +1,4 @@
-import type { Metadata } from "next";
+import type { Metadata, Viewport } from "next";
 import { Suspense } from "react";
 import "./globals.css";
 import "./despariat.css";
@@ -9,6 +9,12 @@ import RestrictionBanner from "@/components/RestrictionBanner";
 export const metadata: Metadata = {
   title: "Despariat – Campus Marketplace",
   description: "The student marketplace. Meet on campus. Inspect before you pay.",
+};
+
+export const viewport: Viewport = {
+  width: "device-width",
+  initialScale: 1,
+  interactiveWidget: "resizes-content",
 };
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
