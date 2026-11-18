@@ -7,6 +7,7 @@ import { connection } from "next/server";
 import Avatar from '@/components/Avatar'
 import AvatarUploader from '@/components/AvatarUploader'
 import MarkSoldButton from '@/components/MarkSoldButton'
+import Splash from "@/components/Splash";
 
 async function Dashboard() {
   await connection();

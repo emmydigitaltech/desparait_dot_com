@@ -3,6 +3,7 @@ import { connection } from 'next/server';
 import { notFound, redirect } from 'next/navigation';
 import { createClient } from '@/lib/supabase/server';
 import EditListingForm from '@/components/EditListingForm';
+import Splash from "@/components/Splash";
 
 async function Loader({ params }: { params: Promise<{ id: string }> }) {
   const { id } = await params;

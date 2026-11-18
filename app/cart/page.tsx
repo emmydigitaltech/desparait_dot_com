@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 import { setInCart } from "@/lib/cartStore";
 import StartChatButton from "@/components/StartChatButton";
+import Splash from "@/components/Splash";
 
 
 type Item = {
