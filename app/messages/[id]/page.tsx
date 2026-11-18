@@ -344,7 +344,7 @@ export default function ThreadPage() {
     await sendAttachment(file, "audio", "", seconds);
   }
 
-  if (loading) return <p className="dp-meta" style={{ padding: 24 }}>Loading…</p>;
+  if (loading) return <p className="dp-meta" style={{ padding: 24 }}>if (loading) return <Splash />;</p>;
   if (!conv) return (
     <div className="dp-chat">
       <p className="dp-err">{err}</p>

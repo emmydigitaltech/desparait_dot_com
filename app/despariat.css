@@ -1182,3 +1182,19 @@ main.dp-chat {
 .dp-file small { display: block; opacity: .7; }
 .dp-att-ph { width: 200px; height: 140px; border-radius: 8px; background: rgba(255,255,255,.1); }
 .dp-att-ph-audio { height: 40px; }
+
+/* ---- splash ---- */
+.dp-splash { display: grid; place-items: center; min-height: 50vh; width: 100%; }
+.dp-splash--overlay {
+  position: fixed; inset: 0; z-index: 9999; min-height: 0;
+  background: color-mix(in srgb, var(--dp-bg, #0a0a0a) 82%, transparent);
+  backdrop-filter: blur(3px);
+}
+.dp-splash img { object-fit: contain; animation: dp-splash 1.2s ease-in-out infinite; }
+@keyframes dp-splash {
+  0%, 100% { opacity: .45; transform: scale(.92); filter: grayscale(1); }
+  50% { opacity: 1; transform: scale(1); filter: grayscale(0); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dp-splash img { animation: none; opacity: .85; }
+}

@@ -5,6 +5,8 @@ import "./despariat.css";
 import Header from "@/components/Header";
 import Footer from "@/components/Footer";
 import RestrictionBanner from "@/components/RestrictionBanner";
+import Splash from "@/components/Splash";
+import { BusyProvider, RouteWatcher } from "@/components/BusyProvider";
 
 export const metadata: Metadata = {
   title: "Despariat – Campus Marketplace",
@@ -27,16 +29,21 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
           }}
         />
       </head>
-      <body className="dp-body">
-        <Suspense fallback={<div className="dp-header-skeleton" />}>
-          <Header />
-          <RestrictionBanner />
-        </Suspense>
-        <main className="dp-main">
-          <Suspense fallback={null}>{children}</Suspense>
-        </main>
-        <Footer />
-      </body>
+<body className="dp-body">
+  <BusyProvider>
+    <Suspense fallback={<div className="dp-header-skeleton" />}>
+      <Header />
+      <RestrictionBanner />
+    </Suspense>
+    <main className="dp-main">
+      <Suspense fallback={<Splash />}>{children}</Suspense>
+    </main>
+    <Footer />
+    <Suspense fallback={null}>
+      <RouteWatcher />
+    </Suspense>
+  </BusyProvider>
+</body>
     </html>
   );
 }

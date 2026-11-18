@@ -57,7 +57,7 @@ export default function CartPage() {
     router.refresh();
   }
 
-  if (loading) return <p className="dp-meta" style={{ padding: 24 }}>Loading…</p>;
+  if (loading) return <p className="dp-meta" style={{ padding: 24 }}>if (loading) return <Splash />;</p>;
 
   const valid = items.filter((i) => i.listings);
   const total = valid.reduce((s, i) => s + i.listings!.price, 0);

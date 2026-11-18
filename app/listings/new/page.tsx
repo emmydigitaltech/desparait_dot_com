@@ -168,7 +168,7 @@ export default function NewListingPage() {
     }
   }
 
-  if (checking) return <main className="dp-sell"><p className="dp-sell-hint">Loading…</p></main>;
+  if (checking) return <main className="dp-sell"><p className="dp-sell-hint">if (loading) return <Splash />;</p></main>;
 
   if (block) {
     return (

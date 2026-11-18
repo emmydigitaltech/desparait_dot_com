@@ -21,7 +21,7 @@ async function Loader({ params }: { params: Promise<{ id: string }> }) {
 
 export default function Page({ params }: { params: Promise<{ id: string }> }) {
   return (
-    <Suspense fallback={<p className="dp-mut">Loading…</p>}>
+    <Suspense fallback={<p className="dp-mut">if (loading) return <Splash />;</p>}>
       <Loader params={params} />
     </Suspense>
   );

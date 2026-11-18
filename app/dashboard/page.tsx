@@ -138,5 +138,5 @@ async function Dashboard() {
 }
 
 export default function Page() {
-  return <Suspense fallback={<p className="p-6">Loading…</p>}><Dashboard /></Suspense>
+  return <Suspense fallback={<p className="p-6">if (loading) return <Splash />;</p>}><Dashboard /></Suspense>
 }
