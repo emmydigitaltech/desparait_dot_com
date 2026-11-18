@@ -3,8 +3,21 @@
 import { useEffect, useRef, useState } from "react";
 import Link from "next/link";
 import { useParams, useRouter } from "next/navigation";
+import { config } from "@fortawesome/fontawesome-svg-core";
+import "@fortawesome/fontawesome-svg-core/styles.css";
+import { FontAwesomeIcon } from "@fortawesome/react-fontawesome";
+import {
+  faPaperclip,
+  faMicrophone,
+  faPaperPlane,
+  faTrashCan,
+  faXmark,
+  faFileLines,
+} from "@fortawesome/free-solid-svg-icons";
 import { createClient } from "@/lib/supabase/client";
 import OrderPanel from "@/components/OrderPanel";
+
+config.autoAddCss = false;
 
 type AttType = "image" | "file" | "audio";
 type Msg = {
@@ -72,7 +85,8 @@ export default function ThreadPage() {
   const timerRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const secsRef = useRef(0);
 
-  const bottomRef = useRef<HTMLDivElement>(null);
+  const bodyRef = useRef<HTMLDivElement>(null);
+  const firstScroll = useRef(true);
   const fileRef = useRef<HTMLInputElement>(null);
 
   async function markRead(uid: string) {
@@ -158,8 +172,12 @@ export default function ThreadPage() {
     return () => { off = true; };
   }, [msgs]); // eslint-disable-line react-hooks/exhaustive-deps
 
+  // scroll only the message list (not the whole page) to the newest message
   useEffect(() => {
-    bottomRef.current?.scrollIntoView({ behavior: "smooth", block: "end" });
+    const el = bodyRef.current;
+    if (!el) return;
+    el.scrollTo({ top: el.scrollHeight, behavior: firstScroll.current ? "auto" : "smooth" });
+    if (msgs.length) firstScroll.current = false;
   }, [msgs.length]);
 
   // stop the mic if the user leaves mid-recording
@@ -328,16 +346,16 @@ export default function ThreadPage() {
 
   if (loading) return <p className="dp-meta" style={{ padding: 24 }}>Loading…</p>;
   if (!conv) return (
-    <main className="dp-chat">
+    <div className="dp-chat">
       <p className="dp-err">{err}</p>
       <Link href="/messages">← Back to messages</Link>
-    </main>
+    </div>
   );
 
   const hasContent = !!text.trim() || !!pending;
 
   return (
-    <main className="dp-chat">
+    <div className="dp-chat">
       <div className="dp-chat-head">
         <Link href="/messages" aria-label="Back to messages">←</Link>
         {conv.listings?.image_url && (
@@ -360,7 +378,7 @@ export default function ThreadPage() {
         listingPrice={conv.listings?.price ?? 0}
       />
 
-      <div className="dp-chat-body">
+      <div className="dp-chat-body" ref={bodyRef}>
         {msgs.length === 0 && <p className="dp-meta">Say hello 👋 Ask about the item, then arrange to meet.</p>}
         {msgs.map((m, i) => {
           if (m.kind === "system") return <div key={m.id} className="dp-sysmsg">{m.body}</div>;
@@ -371,7 +389,12 @@ export default function ThreadPage() {
           const isLast = i === msgs.length - 1;
 
           return (
-            <div key={m.id} className={`dp-bubble ${m.sender_id === me ? "is-mine" : "is-theirs"}`}>
+            <div
+              key={m.id}
+              className={`dp-bubble ${m.sender_id === me ? "is-mine" : "is-theirs"} ${
+                m.attachment_type === "image" ? "has-img" : ""
+              }`}
+            >
               {m.attachment_type === "image" &&
                 (url ? (
                   <a href={url} target="_blank" rel="noreferrer">
@@ -380,7 +403,10 @@ export default function ThreadPage() {
                       src={url}
                       alt={m.attachment_name ?? "Photo"}
                       loading="lazy"
-                      onLoad={() => isLast && bottomRef.current?.scrollIntoView({ block: "end" })}
+                      onLoad={() => {
+                        const el = bodyRef.current;
+                        if (isLast && el) el.scrollTop = el.scrollHeight;
+                      }}
                     />
                   </a>
                 ) : (
@@ -396,7 +422,7 @@ export default function ThreadPage() {
 
               {m.attachment_type === "file" && (
                 <a className="dp-file" href={url} target="_blank" rel="noreferrer">
-                  <span aria-hidden>📄</span>
+                  <FontAwesomeIcon icon={faFileLines} className="dp-file-ico" />
                   <span>
                     <strong>{m.attachment_name ?? "File"}</strong>
                     <small>{fmtSize(m.attachment_size)}</small>
@@ -409,7 +435,6 @@ export default function ThreadPage() {
             </div>
           );
         })}
-        <div ref={bottomRef} className="dp-chat-end" />
       </div>
 
       <div className="dp-chat-compose">
@@ -421,36 +446,44 @@ export default function ThreadPage() {
               // eslint-disable-next-line @next/next/no-img-element
               <img src={pending.preview} alt="" />
             ) : (
-              <span className="dp-pending-file">📄 {pending.file.name}</span>
+              <span className="dp-pending-file">
+                <FontAwesomeIcon icon={faFileLines} /> {pending.file.name}
+              </span>
             )}
-            <button type="button" className="dp-icon-btn" aria-label="Remove attachment" onClick={clearPending}>
-              ×
+            <button type="button" className="dp-ico" aria-label="Remove attachment" onClick={clearPending}>
+              <FontAwesomeIcon icon={faXmark} />
             </button>
           </div>
         )}
 
         {recording ? (
           <div className="dp-chat-form dp-rec">
-            <button type="button" className="dp-icon-btn" aria-label="Cancel recording" onClick={cancelRecording}>
-              🗑
+            <button type="button" className="dp-ico" aria-label="Cancel recording" onClick={cancelRecording}>
+              <FontAwesomeIcon icon={faTrashCan} />
             </button>
             <span className="dp-rec-dot" />
             <span className="dp-rec-time">{fmtTime(secs)}</span>
             <span className="dp-rec-hint">Recording…</span>
-            <button type="button" className="dp-btn" onClick={sendRecording} disabled={sending}>
-              Send
+            <button
+              type="button"
+              className="dp-round"
+              aria-label="Send voice note"
+              onClick={sendRecording}
+              disabled={sending}
+            >
+              <FontAwesomeIcon icon={faPaperPlane} />
             </button>
           </div>
         ) : (
           <form className="dp-chat-form" onSubmit={send}>
             <button
               type="button"
-              className="dp-icon-btn"
+              className="dp-ico"
               aria-label="Attach a photo or file"
               onClick={() => fileRef.current?.click()}
               disabled={sending}
             >
-              📎
+              <FontAwesomeIcon icon={faPaperclip} />
             </button>
             <input
               ref={fileRef}
@@ -477,23 +510,23 @@ export default function ThreadPage() {
               aria-label="Message"
             />
             {hasContent ? (
-              <button type="submit" className="dp-btn" disabled={sending}>
-                {sending ? "…" : "Send"}
+              <button type="submit" className="dp-round" aria-label="Send message" disabled={sending}>
+                <FontAwesomeIcon icon={faPaperPlane} />
               </button>
             ) : (
               <button
                 type="button"
-                className="dp-icon-btn dp-mic"
+                className="dp-round"
                 aria-label="Record a voice note"
                 onClick={startRecording}
                 disabled={sending}
               >
-                🎤
+                <FontAwesomeIcon icon={faMicrophone} />
               </button>
             )}
           </form>
         )}
       </div>
-    </main>
+    </div>
   );
 }
