@@ -21,10 +21,10 @@ export default function OnboardingPage() {
       const {
         data: { user },
       } = await supabase.auth.getUser();
-      if (!user) return router.replace("/");
+      if (!user) return router.replace("/login?next=%2Fonboarding");
 
       const [{ data: s }, { data: p }] = await Promise.all([
-        supabase.from("schools").select("id, name").order("name"),
+        supabase.from("schools").select("id, name").eq("active", true).order("name"),
         supabase
           .from("profiles")
           .select("school_id, full_name, whatsapp")
@@ -42,13 +42,23 @@ export default function OnboardingPage() {
   async function save(e: React.FormEvent) {
     e.preventDefault();
     setError("");
+
+    const school = schools.find((s) => s.id === schoolId);
+    if (!school) return setError("Please choose your school.");
+    if (
+      !window.confirm(
+        `Join ${school.name}? You will only see listings from this school, and you can't change it later.`
+      )
+    )
+      return;
+
     setSaving(true);
     const {
       data: { user },
     } = await supabase.auth.getUser();
     if (!user) {
       setSaving(false);
-      return router.replace("/");
+      return router.replace("/login?next=%2Fonboarding");
     }
 
     const { error } = await supabase.from("profiles").upsert({
@@ -60,13 +70,16 @@ export default function OnboardingPage() {
     setSaving(false);
     if (error) return setError(error.message);
     router.replace("/browse");
+    router.refresh();
   }
 
   return (
     <main className="dp-main">
       <div className="dp-auth">
         <h1>Set up your profile</h1>
-        <p className="dp-meta">You&apos;ll only see listings from your school.</p>
+        <p className="dp-meta">
+          You&apos;ll only see listings from your school, and you can&apos;t change it later.
+        </p>
 
         <form onSubmit={save} className="dp-form" style={{ marginTop: 20 }}>
           <label>

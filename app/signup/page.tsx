@@ -23,7 +23,13 @@ async function Gate({ searchParams }: { searchParams: Promise<{ next?: string }>
   } = await supabase.auth.getUser();
   if (user) redirect(target);
 
-  return <AuthForm mode="signup" next={target} />;
+  const { data: schools } = await supabase
+    .from("schools")
+    .select("id,name")
+    .eq("active", true)
+    .order("name");
+
+  return <AuthForm mode="signup" next={target} schools={schools ?? []} />;
 }
 
 export default function Signup({ searchParams }: { searchParams: Promise<{ next?: string }> }) {

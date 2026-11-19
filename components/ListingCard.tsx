@@ -14,6 +14,7 @@ export type CardListing = {
   rating_avg?: number | null;
   rating_count?: number | null;
   seller?: { full_name: string | null; is_verified: boolean | null } | null;
+  school?: { name: string } | null;
 };
 
 const CONDITION_LABEL: Record<string, string> = {
@@ -36,7 +37,7 @@ function Stars({ rating }: { rating: number }) {
 export default function ListingCard({ listing }: { listing: CardListing }) {
   const {
     id, title, price, original_price, image_url, condition,
-    seller, boosted_until, rating_avg, rating_count,
+    seller, school, boosted_until, rating_avg, rating_count,
   } = listing;
   const off =
     original_price && original_price > price
@@ -90,6 +91,7 @@ export default function ListingCard({ listing }: { listing: CardListing }) {
               </>
             )}
           </p>
+          {school?.name && <p className="dp-lc-school">📍 {school.name}</p>}
         </div>
       </Link>
       <QuickAddButton listingId={id} />

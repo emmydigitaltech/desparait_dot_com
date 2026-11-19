@@ -24,11 +24,11 @@ type Listing = {
   status: string;
   review_note: string | null;
   created_at: string;
+  school: { name: string } | null;
 };
 
 type Seller = {
   full_name: string | null;
-  whatsapp: string | null;
   is_verified: boolean | null;
 };
 
@@ -58,7 +58,7 @@ export default function ListingDetailPage() {
 
       const { data: l, error: lErr } = await supabase
         .from("listings")
-        .select("id, seller_id, title, description, price, original_price, category, image_url, condition, status, review_note, created_at")
+        .select("id, seller_id, title, description, price, original_price, category, image_url, condition, status, review_note, created_at, school:schools(name)")
         .eq("id", id)
         .maybeSingle();
 
@@ -71,11 +71,11 @@ export default function ListingDetailPage() {
         setLoading(false);
         return;
       }
-      setListing(l as Listing);
+      setListing(l as unknown as Listing);
 
       const [{ data: imgs }, { data: p }] = await Promise.all([
         supabase.from("listing_images").select("url, position").eq("listing_id", id).order("position"),
-        supabase.from("profiles").select("full_name, whatsapp, is_verified").eq("id", l.seller_id).maybeSingle(),
+        supabase.from("profiles").select("full_name, is_verified").eq("id", l.seller_id).maybeSingle(),
       ]);
 
       const urls = (imgs ?? []).map((i) => i.url);
@@ -103,6 +103,8 @@ export default function ListingDetailPage() {
     );
 
   const canReport = !!meId && meId !== listing.seller_id;
+  const schoolName = listing.school?.name ?? null;
+  const next = encodeURIComponent(`/listings/${listing.id}`);
 
   return (
     <main className="dp-listing">
@@ -144,6 +146,7 @@ export default function ListingDetailPage() {
           </p>
 
           <div className="dp-listing-tags">
+            {schoolName && <span>📍 {schoolName}</span>}
             {listing.condition && (
               <span>{CONDITION_LABELS[listing.condition] ?? listing.condition}</span>
             )}
@@ -158,7 +161,9 @@ export default function ListingDetailPage() {
           {listing.description && <p className="dp-listing-desc">{listing.description}</p>}
 
           <div className="dp-listing-seller">
-            <p className="dp-listing-muted">Seller</p>
+            <p className="dp-listing-muted">
+              Seller{schoolName ? ` · located at ${schoolName}` : ""}
+            </p>
             <Link
               href={`/sellers/${listing.seller_id}`}
               className="dp-link"
@@ -173,14 +178,28 @@ export default function ListingDetailPage() {
           </div>
 
           {listing.status === "active" ? (
-            <div className="dp-actions">
-              <AddToCartButton listingId={listing.id} />
-              <StartChatButton
-                listingId={listing.id}
-                sellerId={listing.seller_id}
-                className="dp-listing-cta"
-              />
-            </div>
+            meId ? (
+              <div className="dp-actions">
+                <AddToCartButton listingId={listing.id} />
+                <StartChatButton
+                  listingId={listing.id}
+                  sellerId={listing.seller_id}
+                  className="dp-listing-cta"
+                />
+              </div>
+            ) : (
+              <div className="dp-panel" style={{ marginTop: 12 }}>
+                <p style={{ margin: "0 0 10px" }}>
+                  {schoolName
+                    ? `This item is sold by a student at ${schoolName}. Only ${schoolName} students can buy it. Create an account and choose ${schoolName} as your university to add it to your cart or message the seller.`
+                    : "Create an account to add this item to your cart or message the seller."}
+                </p>
+                <div style={{ display: "flex", gap: 10, flexWrap: "wrap" }}>
+                  <Link href={`/signup?next=${next}`} className="dp-btn">Create account</Link>
+                  <Link href={`/login?next=${next}`} className="dp-btn-o">Sign in</Link>
+                </div>
+              </div>
+            )
           ) : (
             <p className="dp-listing-muted">
               {listing.status === "pending" && "Pending approval. Only you can see this listing."}

@@ -20,6 +20,7 @@ const CONDITIONS = [
 const MIN_IMAGES = 4;
 const MAX_IMAGES = 10;
 const MAX_TAGS = 15;
+const MAX_STOCK = 9999;
 const LIMIT_MSG =
   "You can post 3 listings per 24 hours until your account is verified. Get verified to remove this limit.";
 
@@ -47,6 +48,7 @@ export default function NewListingPage() {
     title: "",
     description: "",
     price: "",
+    stock: "1",
     category: "",
     condition: "good",
   });
@@ -103,6 +105,11 @@ export default function NewListingPage() {
     if (left === 0) return setError(LIMIT_MSG);
     if (files.length < MIN_IMAGES)
       return setError(`Add at least ${MIN_IMAGES} photos (you have ${files.length}).`);
+
+    const stock = Math.floor(Number(form.stock));
+    if (!Number.isFinite(stock) || stock < 1 || stock > MAX_STOCK)
+      return setError(`Enter how many are in stock (1 to ${MAX_STOCK}).`);
+
     setSaving(true);
 
     let listingId: string | null = null;
@@ -122,6 +129,7 @@ export default function NewListingPage() {
           title: form.title.trim(),
           description: form.description.trim(),
           price: Math.round(Number(form.price)),
+          stock,
           condition: form.condition,
           tags: mergeTags(tags, tagInput),
           status: "pending", // the database forces this anyway
@@ -271,6 +279,22 @@ export default function NewListingPage() {
           value={form.price}
           onChange={set("price")}
         />
+        <div>
+          <input
+            required
+            type="number"
+            min="1"
+            max={MAX_STOCK}
+            step="1"
+            inputMode="numeric"
+            placeholder="How many are in stock?"
+            value={form.stock}
+            onChange={set("stock")}
+          />
+          <p className="dp-sell-hint">
+            Number of units you have to sell. Each completed handover uses one.
+          </p>
+        </div>
         <select required value={form.category} onChange={set("category")}>
           <option value="">Category</option>
           {categories.map((c) => (

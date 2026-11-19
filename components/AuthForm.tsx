@@ -4,10 +4,21 @@ import { useState } from "react";
 import { useRouter } from "next/navigation";
 import { createClient } from "@/lib/supabase/client";
 
-export default function AuthForm({ mode, next }: { mode: "login" | "signup"; next: string }) {
+type School = { id: string; name: string };
+
+export default function AuthForm({
+  mode,
+  next,
+  schools = [],
+}: {
+  mode: "login" | "signup";
+  next: string;
+  schools?: School[];
+}) {
   const router = useRouter();
   const isSignup = mode === "signup";
   const [name, setName] = useState("");
+  const [schoolId, setSchoolId] = useState("");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [busy, setBusy] = useState(false);
@@ -18,6 +29,9 @@ export default function AuthForm({ mode, next }: { mode: "login" | "signup"; nex
   async function submit(e: React.FormEvent) {
     e.preventDefault();
     setErr(null);
+
+    if (isSignup && !schoolId) return setErr("Please choose your university.");
+
     setBusy(true);
     const supabase = createClient();
 
@@ -26,7 +40,7 @@ export default function AuthForm({ mode, next }: { mode: "login" | "signup"; nex
         email: email.trim(),
         password,
         options: {
-          data: { full_name: name.trim() },
+          data: { full_name: name.trim(), school_id: schoolId },
           emailRedirectTo: `${location.origin}/auth/callback?next=${encodeURIComponent(next)}`,
         },
       });
@@ -75,6 +89,20 @@ export default function AuthForm({ mode, next }: { mode: "login" | "signup"; nex
           <label>
             Full name
             <input value={name} onChange={(e) => setName(e.target.value)} required autoComplete="name" />
+          </label>
+        )}
+        {isSignup && (
+          <label>
+            Your university
+            <select value={schoolId} onChange={(e) => setSchoolId(e.target.value)} required>
+              <option value="" disabled>Select your university</option>
+              {schools.map((s) => (
+                <option key={s.id} value={s.id}>{s.name}</option>
+              ))}
+            </select>
+            <span className="dp-meta">
+              You will only see listings from your university, and this can&apos;t be changed later.
+            </span>
           </label>
         )}
         <label>

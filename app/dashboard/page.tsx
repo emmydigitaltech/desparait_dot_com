@@ -15,7 +15,7 @@ async function Dashboard() {
   const { data: { user } } = await supabase.auth.getUser()
   if (!user) redirect('/login')
 
-  const [{ data: profile }, { data: req }, { data: myListings, error: listingsError }] = await Promise.all([
+  const [{ data: profile }, { data: req }, { data: myListings, error: listingsError }, { data: pts }] = await Promise.all([
     supabase.from('profiles')
       .select('full_name, avatar_url, phone, campus, role, is_verified')
       .eq('id', user.id).single(),
@@ -27,11 +27,13 @@ async function Dashboard() {
       .eq('seller_id', user.id)
       .order('created_at', { ascending: false })
       .limit(20),
+    supabase.rpc('get_my_points'),
   ])
 
   if (listingsError) console.error('Dashboard listings error:', listingsError)
 
   const { pct, missing, canSell } = getCompletion(profile)
+  const pp = (pts ?? null) as { available?: number; pending?: number } | null
 
   const category =
     profile?.role === 'admin' ? 'Admin'
@@ -105,6 +107,29 @@ async function Dashboard() {
       </section>
 
       <section className="dp-panel">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="font-medium">Sales</h2>
+            <p className="dp-mut text-sm">Earnings, orders and your best sellers.</p>
+          </div>
+          <Link href="/dashboard/sales" className="dp-link text-sm">View dashboard</Link>
+        </div>
+      </section>
+
+      <section className="dp-panel">
+        <div className="flex items-center justify-between">
+          <div>
+            <h2 className="font-medium">Points</h2>
+            <p className="dp-mut text-sm">
+              {Number(pp?.available ?? 0)} available
+              {Number(pp?.pending ?? 0) > 0 ? ` · ${Number(pp?.pending)} pending` : ''}
+            </p>
+          </div>
+          <Link href="/points" className="dp-link text-sm">View &amp; redeem</Link>
+        </div>
+      </section>
+
+      <section className="dp-panel">
         <div className="mb-3 flex items-center justify-between">
           <h2 className="font-medium">My listings</h2>
           <Link href="/listings/new" className="dp-link text-sm">New listing</Link>
@@ -139,4 +164,9 @@ async function Dashboard() {
 }
 
 export default function Page() {
-  return <Suspense fallback={<Splash />}><Dashboard /></Suspense>}
+  return (
+    <Suspense fallback={<Splash />}>
+      <Dashboard />
+    </Suspense>
+  )
+}

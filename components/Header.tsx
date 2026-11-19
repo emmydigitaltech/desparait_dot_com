@@ -68,14 +68,14 @@ export default async function Header() {
               <Link href="/dashboard" className="dp-btn-o dp-hide-sm">Dashboard</Link>
               <Link href="/messages" className="dp-btn-o dp-cart-link" aria-label="Messages">
                 <MessageIcon size={20} />
-                {unreadCount > 0 && <span className="dp-cart-badge">{unreadCount}</span>}
+                 {unreadCount > 0 && <span className="dp-cart-badge">{unreadCount > 99 ? "99+" : unreadCount}</span>}
               </Link>
               <Link href="/cart" className="dp-btn-o dp-cart-link" aria-label="Cart">
                 <CartIcon size={20} />
-                {cartCount > 0 && <span className="dp-cart-badge">{cartCount}</span>}
+                {cartCount > 0 && <span className="dp-cart-badge">{cartCount > 99 ? "99+" : cartCount}</span>}
               </Link>
               <Link href="/listings/new" className="dp-btn dp-hide-sm">Sell something</Link>
-              <ProfileMenu isAdmin={isAdmin} avatarUrl={avatarUrl} name={fullName} bell={<NotificationBell />} />            </>
+              <ProfileMenu isAdmin={isAdmin} avatarUrl={avatarUrl} name={fullName} bell={<NotificationBell />} />   </>
           ) : (
             <>
               <Link href="/login" className="dp-btn-o">Sign in</Link>

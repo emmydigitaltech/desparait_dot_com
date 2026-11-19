@@ -3,7 +3,7 @@ import Link from "next/link";
 import { connection } from "next/server";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import MarkRead from "./MarkRead";
+import MarkNotificationsRead from "@/components/MarkNotificationsRead";
 
 type N = {
   id: string; kind: string; title: string; body: string | null;
@@ -26,7 +26,6 @@ async function List() {
 
   return (
     <>
-      {items.some((n) => !n.read_at) && <MarkRead />}
       {items.length === 0 && <p style={{ opacity: 0.7 }}>No notifications yet.</p>}
       <div style={{ display: "flex", flexDirection: "column", gap: 10 }}>
         {items.map((n) => (
@@ -54,6 +53,7 @@ async function List() {
           </div>
         ))}
       </div>
+      {items.some((n) => !n.read_at) && <MarkNotificationsRead />}
     </>
   );
 }

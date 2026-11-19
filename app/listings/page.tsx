@@ -5,6 +5,7 @@ import { connection } from "next/server";
 import { createClient } from "@/lib/supabase/server";
 import { LISTING_SELECT } from "@/lib/types";
 import BoostButton from "@/components/BoostButton";
+import ListingManage from "@/components/ListingManage";
 
 type MyListing = {
   id: string;
@@ -14,12 +15,14 @@ type MyListing = {
   category: string | null;
   status: string;
   boosted_until: string | null;
+  stock: number;
 };
 
 const STATUS_LABEL: Record<string, string> = {
   active: "Live",
-  sold: "Sold",
+  sold: "Sold out",
   pending: "Awaiting approval",
+  rejected: "Rejected",
 };
 
 async function MyListings() {
@@ -33,8 +36,9 @@ async function MyListings() {
 
   const { data, error } = await supabase
     .from("listings")
-    .select(`${LISTING_SELECT}, status, boosted_until`)
+    .select(`${LISTING_SELECT}, status, boosted_until, stock`)
     .eq("seller_id", user.id)
+    .neq("status", "deleted")
     .order("created_at", { ascending: false });
 
   if (error) {
@@ -75,7 +79,9 @@ async function MyListings() {
               <Link href={`/listings/${l.id}`} className="dp-my-title">
                 {l.title}
               </Link>
-              <p className="dp-my-price">₦{Number(l.price).toLocaleString()}</p>
+              <p className="dp-my-price">
+                ₦{Number(l.price).toLocaleString()} · {l.stock} in stock
+              </p>
               <p className="dp-my-meta">
                 <span className={`dp-my-status dp-my-status-${l.status}`}>
                   {STATUS_LABEL[l.status] ?? l.status}
@@ -93,7 +99,7 @@ async function MyListings() {
                 Edit
               </Link>
               {l.status === "active" && <BoostButton listingId={l.id} />}
-              {/* Mark sold: drop in <MarkSoldButton ... /> with the same props your dashboard uses */}
+              <ListingManage listingId={l.id} title={l.title} status={l.status} />
             </div>
           </div>
         );
