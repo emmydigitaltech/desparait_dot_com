@@ -9,7 +9,6 @@ let lastEnd = 0;
 export default function Splash({ overlay = false, size = 72 }: { overlay?: boolean; size?: number }) {
   const ref = useRef<HTMLDivElement>(null);
 
-  // runs before paint, client only: skip the fade-in delay if another splash was just on screen
   useLayoutEffect(() => {
     if (active > 0 || Date.now() - lastEnd < 400) {
       ref.current?.classList.add("dp-splash--warm");
@@ -31,8 +30,10 @@ export default function Splash({ overlay = false, size = 72 }: { overlay?: boole
       role="status"
       aria-label="Loading"
     >
-      {/* eslint-disable-next-line @next/next/no-img-element */}
-      <img src="/logo.png" alt="" width={size} height={size} />
+      <span className="dp-splash-logo">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/logo.png" alt="" style={{ height: size, width: "auto" }} />
+      </span>
     </div>
   );
 }
