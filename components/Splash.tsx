@@ -32,7 +32,7 @@ export default function Splash({ overlay = false, size = 72 }: { overlay?: boole
     >
       <span className="dp-splash-logo">
         {/* eslint-disable-next-line @next/next/no-img-element */}
-        <img src="/logo.png" alt="" style={{ height: size, width: "auto" }} />
+        <img src="/logo-white.png" alt="" style={{ height: size, width: "auto" }} />      
       </span>
     </div>
   );

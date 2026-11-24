@@ -48,8 +48,8 @@ async function Dashboard() {
     supabase.from('seller_bank_details').select('*', { count: 'exact', head: true }),
   ])
 
-  if (listingsError) console.error('Dashboard listings error:', listingsError)
-
+  if (listingsError) console.error('Dashboard listings error:', listingsError.message, listingsError.code, listingsError.details, listingsError.hint)
+    
   const { pct, missing, canSell } = getCompletion(profile)
   const pp = (pts ?? null) as { available?: number; pending?: number } | null
   const isAdmin = profile?.role === 'admin'

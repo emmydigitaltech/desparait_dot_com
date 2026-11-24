@@ -1498,3 +1498,80 @@ main.dp-chat {
 }
 
 
+/* ---------- dashboard: dark mode ---------- */
+:root[data-theme="dark"] .fv-card {
+  background: #141414;
+  color: var(--dp-fg);
+  border-color: var(--dp-line);
+}
+:root[data-theme="dark"] .fv-card :is(.fv-h, .fv-title, .fv-ltitle, .fv-name, .fv-big, .fv-progress-head) {
+  color: var(--dp-fg);
+}
+:root[data-theme="dark"] .fv-card :is(.fv-mut, .fv-sm) { color: var(--dp-mut); }
+:root[data-theme="dark"] .fv-btn-o {
+  background: transparent;
+  color: var(--dp-fg);
+  border-color: var(--dp-line);
+}
+:root[data-theme="dark"] .fv-list .fv-row { border-color: var(--dp-line); }
+
+/* ---------- dashboard: small phones ---------- */
+@media (max-width: 480px) {
+  .fv-row { flex-wrap: wrap; gap: 8px; align-items: center; }
+  .fv-row .fv-grow { flex: 1 1 120px; min-width: 0; }
+  .fv-ltitle, .fv-title { overflow-wrap: anywhere; }
+  .fv-row .fv-btn-o, .fv-row .fv-btn-sm { flex: none; }
+  .fv-stats { grid-template-columns: 1fr 1fr; }
+  .fv-card { padding: 14px; }
+}
+
+/* ---------- header: small phones ---------- */
+@media (max-width: 640px) {
+  .dp-top {
+    flex-wrap: wrap;
+    gap: 8px 10px;
+    padding: 8px 12px;
+    align-items: center;
+  }
+  /* search bar drops to its own full-width row at the bottom */
+  .dp-top .dp-search {
+    order: 99;
+    flex: 1 1 100%;
+    min-width: 100%;
+  }
+  /* logo, theme toggle, chat, cart, avatar and bell stay on one row */
+  .dp-top .dp-actions {
+    margin-left: auto;
+    gap: 10px;
+    flex-wrap: nowrap;
+  }
+  .dp-logo-img { width: 38px; height: 38px; }
+}
+
+@media (max-width: 397px) {
+  .dp-top { gap: 6px 8px; padding: 8px; }
+  .dp-top .dp-actions { gap: 6px; }
+  .dp-logo-img { width: 34px; height: 34px; }
+}
+
+/* splash logo is white; flip to black when the page is light */
+.dp-splash-logo { display: block; }
+
+@media (prefers-color-scheme: light) {
+  :root:not([data-theme="dark"]) .dp-splash-logo { filter: invert(1); }
+}
+:root[data-theme="light"] .dp-splash-logo { filter: invert(1); }
+
+@media (max-width: 400px) {
+  .dp-top .dp-theme-btn { display: none; }
+}
+
+/* my chat bubbles: dark text on yellow */
+.dp-bubble.is-mine,
+.dp-bubble.is-mine :is(span, p, a, strong) {
+  color: #111;
+}
+.dp-bubble.is-mine time {
+  color: #111;
+  opacity: .6;
+}
